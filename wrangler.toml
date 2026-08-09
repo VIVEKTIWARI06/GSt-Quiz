@@ -1,0 +1,12 @@
+name = "gst-quiz"
+compatibility_date = "2026-08-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gst-quiz-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# The rest of the env vars (RESEND_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
+# GAS_WEBHOOK_URL, SESSION_SECRET, FROM_EMAIL) are set as Pages secrets/vars in
+# the Cloudflare dashboard, not here — see README.md "Environment variables".
