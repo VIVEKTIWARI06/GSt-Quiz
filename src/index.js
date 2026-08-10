@@ -1,6 +1,62 @@
+// Worker entry point (the "new unified Workers" model Cloudflare now uses).
+// This is a thin router: it reuses the exact same handler functions that
+// live under /functions/api/*.js (originally written for Pages Functions —
+// their onRequestGet/onRequestPost signature is compatible, so nothing in
+// those files needed to change), and falls back to serving static files
+// from /public for everything else via the ASSETS binding.
+
+import { onRequestGet as coursesGet } from "../functions/api/courses.js";
+import { onRequestPost as leadPost } from "../functions/api/lead.js";
+import { onRequestPost as verifyOtpPost } from "../functions/api/verify-otp.js";
+import { onRequestPost as quizStartPost } from "../functions/api/quiz/start.js";
+import { onRequestPost as answerPost } from "../functions/api/answer.js";
+import { onRequestPost as submitPost } from "../functions/api/submit.js";
+import { onRequestPost as certificatePost } from "../functions/api/certificate.js";
+import { onRequestPost as telegramWebhookPost } from "../functions/api/telegram-webhook.js";
+import { onRequestGet as adminCoursesGet } from "../functions/api/admin/courses.js";
+import { onRequestPost as adminImportPost } from "../functions/api/admin/import-questions.js";
+import { onRequestPost as adminBackupPost } from "../functions/api/admin/backup-now.js";
+import { runBackup } from "../functions/_backup.js";
+
+const routes = {
+  "GET /api/courses": coursesGet,
+  "POST /api/lead": leadPost,
+  "POST /api/verify-otp": verifyOtpPost,
+  "POST /api/quiz/start": quizStartPost,
+  "POST /api/answer": answerPost,
+  "POST /api/submit": submitPost,
+  "POST /api/certificate": certificatePost,
+  "POST /api/telegram-webhook": telegramWebhookPost,
+  "GET /api/admin/courses": adminCoursesGet,
+  "POST /api/admin/import-questions": adminImportPost,
+  "POST /api/admin/backup-now": adminBackupPost,
+};
 
 export default {
-  async fetch(request) {
-    return new Response("Hello from Worker!");
-  }
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const routeKey = `${request.method} ${url.pathname}`;
+    const handler = routes[routeKey];
+
+    if (handler) {
+      try {
+        return await handler({ request, env, ctx });
+      } catch (err) {
+        console.error(err);
+        return new Response(JSON.stringify({ error: err.message || "Server error" }), {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        });
+      }
+    }
+
+    // Not an API route — serve the static frontend from /public.
+    return env.ASSETS.fetch(request);
+  },
+
+  // Runs automatically every Sunday (see wrangler.toml [triggers] crons)
+  // and emails a full JSON backup of every table to BACKUP_EMAIL.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runBackup(env));
+  },
 };

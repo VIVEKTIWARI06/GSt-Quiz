@@ -1,0 +1,5 @@
+question,description,question_type,option_1,option_2,option_3,option_4,correct_option,points,category,hint,grading_mode,answer_limit
+What does GST stand for?,,Multiple Choice,Goods and Services Tax,General Sales Tax,Government Service Tax,Gross Sales Tax,Goods and Services Tax,1,GST,,auto,
+On which date was GST implemented in India?,,Multiple Choice,1-Apr-17,1-Jul-17,15-Aug-17,1-Jan-18,1-Jul-17,1,GST,,auto,
+Who is the ex-officio Chairperson of the GST Council?,,Multiple Choice,Prime Minister,RBI Governor,Union Finance Minister,Cabinet Secretary,Union Finance Minister,1,GST,,auto,
+How many standard GST tax slabs are there in India (excluding 0% and special rates)?,,Multiple Choice,2,3,4,5,4,1,GST,,auto,

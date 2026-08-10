@@ -6,7 +6,16 @@ compatibility_date = "2026-08-01"
 directory = "public"
 binding = "ASSETS"
 
-#[[d1_databases]]
-#binding = "DB"
-#database_name = "gst-quiz-db"
-#database_id = "703f586f-4862-467c-be02-848d8597713d"
+[[d1_databases]]
+binding = "DB"
+database_name = "gst-quiz-db"
+database_id = "703f586f-4862-467c-be02-848d8597713d"
+
+[triggers]
+crons = ["0 3 * * 1"]
+# Runs every Sunday at 3:00 AM UTC (8:30 AM IST) — emails a full backup
+# of the database to whatever address is set as the BACKUP_EMAIL secret.
+
+# The rest of the env vars (RESEND_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
+# GAS_WEBHOOK_URL, SESSION_SECRET, FROM_EMAIL) are set as secrets/vars in
+# the Cloudflare dashboard, not here — see README.md "Environment variables".
