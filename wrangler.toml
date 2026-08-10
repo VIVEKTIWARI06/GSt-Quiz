@@ -1,4 +1,4 @@
-name = "gst-quiz"
+name = "gst-quiz-v2"
 main = "src/index.js"
 compatibility_date = "2026-08-01"
 
