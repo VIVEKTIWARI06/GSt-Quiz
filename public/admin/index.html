@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — GST Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  .admin-wrap { max-width: 820px; }
+  .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .admin-grid label { margin-bottom: 0; }
+  textarea, select {
+    display: block; width: 100%; margin-top: 6px; padding: 12px 14px;
+    border: 1px solid #d8d2c4; border-radius: 8px; font-size: 14px; font-family: var(--sans);
+  }
+  textarea { min-height: 140px; font-family: monospace; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eee7d8; }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .result-box { background: #f7f5f0; border-radius: 8px; padding: 16px; margin-top: 16px; font-size: 13px; white-space: pre-wrap; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .badge.ok { background: #e5f3ea; color: var(--ok); }
+  .badge.warn { background: #fbe9d9; color: #a05a1e; }
+</style>
+</head>
+<body>
+
+<div class="wrap admin-wrap">
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark">GST</span>
+      <span class="brand-name">Admin</span>
+    </div>
+    <a href="/" style="color: var(--muted); font-size: 13px;">&larr; Back to quiz</a>
+  </header>
+
+  <main class="card">
+    <section id="screen-login" class="screen active">
+      <h1>Admin login</h1>
+      <p class="sub">Enter the admin password to manage courses and questions.</p>
+      <label>Password<input type="password" id="admin-password" /></label>
+      <button id="btn-login" class="btn-primary">Enter</button>
+      <p class="error" id="login-error"></p>
+    </section>
+
+    <section id="screen-admin" class="screen">
+      <h1>Course &amp; question manager</h1>
+      <p class="sub">Type an existing Course ID to add/replace its questions, or a brand-new one to create a whole new course.</p>
+
+      <div class="admin-grid">
+        <label>Course ID (slug)<input type="text" id="course-id" placeholder="e.g. basic-gst" /></label>
+        <label>Course name<input type="text" id="course-name" placeholder="e.g. Basic GST Certification" /></label>
+        <label>Questions per attempt<input type="number" id="course-qcount" value="30" /></label>
+        <label>Pass %<input type="number" id="course-pass" value="60" /></label>
+        <label>Time limit (min)<input type="number" id="course-time" value="30" /></label>
+        <label>
+          <input type="checkbox" id="course-replace" style="width:auto;display:inline-block;margin-right:6px;" />
+          Replace all existing questions for this course (instead of adding to them)
+        </label>
+      </div>
+
+      <label style="margin-top: 16px;">
+        CSV file
+        <input type="file" id="csv-file" accept=".csv" />
+      </label>
+      <p class="muted small">
+        Only these columns are used: <strong>question, option_1, option_2, option_3, option_4, correct_option</strong>
+        (correct_option is the full text of the right answer, exactly matching one of the 4 options).
+        Any other columns in your file (description, points, category, hint, etc.) are fine to include and are just ignored.
+        <br /><a href="/sample-questions.csv" download style="color: var(--gold); font-weight: 600;">Download a sample CSV template &darr;</a>
+      </p>
+
+      <button id="btn-import" class="btn-primary" style="margin-top: 12px;">Import questions</button>
+      <div id="import-result" class="result-box hidden"></div>
+
+      <h2 style="margin-top: 40px;">Backups</h2>
+      <p class="sub">A full backup emails itself automatically every Sunday. You can also trigger one right now.</p>
+      <button id="btn-backup" class="btn-secondary">Backup now</button>
+      <p class="muted small" id="backup-status"></p>
+
+      <h2 style="margin-top: 40px;">Existing courses</h2>
+      <table id="courses-table">
+        <thead>
+          <tr><th>Course</th><th>Bank size</th><th>Per attempt</th><th>Pass %</th><th>Completed attempts</th></tr>
+        </thead>
+        <tbody id="courses-tbody"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="/admin.js"></script>
+</body>
+</html>

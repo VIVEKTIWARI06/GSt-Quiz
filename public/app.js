@@ -55,6 +55,17 @@ async function loadCourses() {
       });
       list.appendChild(el);
     });
+
+    // If linked from the landing page with ?course=some-id, skip straight
+    // to the signup form for that course instead of making them pick again.
+    const preselect = new URLSearchParams(window.location.search).get("course");
+    if (preselect) {
+      const match = data.courses.find((c) => c.id === preselect);
+      if (match) {
+        state.selectedCourse = match;
+        show("screen-lead");
+      }
+    }
   } catch (e) {
     $("#course-list").innerHTML = `<p class="error">Couldn't load courses: ${escapeHtml(e.message)}</p>`;
   }

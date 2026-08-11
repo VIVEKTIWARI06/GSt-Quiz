@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GST Certification Quiz — gstreturn.org</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<div class="wrap">
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark">GST</span>
+      <span class="brand-name">gstreturn.org</span>
+    </div>
+    <span class="header-tag">Certification Quiz</span>
+  </header>
+
+  <main id="app" class="card">
+    <!-- Screen: choose course -->
+    <section id="screen-course" class="screen active">
+      <h1>Choose your course</h1>
+      <p class="sub">Pick the certification you're attempting today.</p>
+      <div id="course-list" class="course-list">
+        <p class="muted">Loading courses…</p>
+      </div>
+    </section>
+
+    <!-- Screen: lead capture -->
+    <section id="screen-lead" class="screen">
+      <button class="back-link" data-back="screen-course">&larr; Change course</button>
+      <h1>Your details</h1>
+      <p class="sub">We'll email you a 6-digit code to verify it's really you.</p>
+      <form id="lead-form">
+        <label>Full name<input type="text" id="lead-name" required placeholder="e.g. Aisha Kamara" /></label>
+        <label>Email address<input type="email" id="lead-email" required placeholder="you@example.com" /></label>
+        <label>Mobile number<input type="tel" id="lead-mobile" required placeholder="+91 98765 43210" /></label>
+        <button type="submit" class="btn-primary">Send verification code</button>
+        <p class="error" id="lead-error"></p>
+      </form>
+    </section>
+
+    <!-- Screen: OTP verify -->
+    <section id="screen-otp" class="screen">
+      <button class="back-link" data-back="screen-lead">&larr; Edit details</button>
+      <h1>Check your email</h1>
+      <p class="sub">Enter the 6-digit code we just sent you.</p>
+      <form id="otp-form">
+        <label>Verification code<input type="text" id="otp-code" inputmode="numeric" maxlength="6" required placeholder="123456" /></label>
+        <button type="submit" class="btn-primary">Verify &amp; start quiz</button>
+        <p class="error" id="otp-error"></p>
+      </form>
+    </section>
+
+    <!-- Screen: quiz -->
+    <section id="screen-quiz" class="screen">
+      <div class="quiz-topbar">
+        <span id="quiz-progress">Question 1 of 30</span>
+        <span id="quiz-timer">30:00</span>
+      </div>
+      <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      <h2 id="quiz-question" class="quiz-question"></h2>
+      <div id="quiz-options" class="quiz-options"></div>
+      <div class="quiz-nav">
+        <button id="quiz-prev" class="btn-secondary" type="button">Previous</button>
+        <button id="quiz-next" class="btn-primary" type="button">Next</button>
+        <button id="quiz-submit" class="btn-primary hidden" type="button">Submit quiz</button>
+      </div>
+    </section>
+
+    <!-- Screen: result -->
+    <section id="screen-result" class="screen">
+      <div id="result-badge" class="result-badge"></div>
+      <h1 id="result-heading"></h1>
+      <p id="result-detail" class="sub"></p>
+      <div id="cert-actions" class="cert-actions hidden">
+        <button id="btn-email-cert" class="btn-primary">Email me the certificate</button>
+        <a id="btn-telegram-cert" class="btn-secondary" href="#" target="_blank" rel="noopener">Get it on Telegram</a>
+        <p class="muted small" id="cert-status"></p>
+      </div>
+      <button id="btn-restart" class="btn-secondary">Take another quiz</button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>gstreturn.org &middot; GST Certification Program</p>
+  </footer>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
