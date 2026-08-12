@@ -193,3 +193,5 @@ reduce trivial copying:
 - Per-question option shuffling
 - Resend domain verification walkthrough for a fully-branded `@gstreturn.org` sender
 - Rate limiting on `/api/lead` to stop OTP-spam abuse
+
+<!-- test deploy.bat -->
