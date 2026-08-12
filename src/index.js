@@ -16,6 +16,9 @@ import { onRequestPost as telegramWebhookPost } from "../functions/api/telegram-
 import { onRequestGet as adminCoursesGet } from "../functions/api/admin/courses.js";
 import { onRequestPost as adminImportPost } from "../functions/api/admin/import-questions.js";
 import { onRequestPost as adminBackupPost } from "../functions/api/admin/backup-now.js";
+import { onRequestPost as quizResumePost } from "../functions/api/quiz/resume.js";
+import { onRequestGet as organizationsGet } from "../functions/api/organizations.js";
+import { onRequestGet as adminOrgsGet, onRequestPost as adminOrgsPost } from "../functions/api/admin/organizations.js";
 import { runBackup } from "../functions/_backup.js";
 
 const routes = {
@@ -23,13 +26,17 @@ const routes = {
   "POST /api/lead": leadPost,
   "POST /api/verify-otp": verifyOtpPost,
   "POST /api/quiz/start": quizStartPost,
+  "POST /api/quiz/resume": quizResumePost,
   "POST /api/answer": answerPost,
   "POST /api/submit": submitPost,
   "POST /api/certificate": certificatePost,
   "POST /api/telegram-webhook": telegramWebhookPost,
+  "GET /api/organizations": organizationsGet,
   "GET /api/admin/courses": adminCoursesGet,
   "POST /api/admin/import-questions": adminImportPost,
   "POST /api/admin/backup-now": adminBackupPost,
+  "GET /api/admin/organizations": adminOrgsGet,
+  "POST /api/admin/organizations": adminOrgsPost,
 };
 
 export default {

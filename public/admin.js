@@ -19,9 +19,56 @@ $("#btn-login").addEventListener("click", async () => {
   $("#login-error").textContent = "";
   try {
     await loadCourses(); // also validates the password
+    await loadOrganizations();
     show("screen-admin");
   } catch (err) {
     $("#login-error").textContent = err.message;
+  }
+});
+
+async function loadOrganizations() {
+  const data = await adminApi("/admin/organizations");
+  const tbody = $("#orgs-tbody");
+  const select = $("#course-org");
+  tbody.innerHTML = "";
+  select.innerHTML = '<option value="">Public — shows on the general course list</option>';
+
+  data.organizations.forEach((o) => {
+    const tr = document.createElement("tr");
+    const link = `${window.location.origin}/take-test/?org=${o.id}`;
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(o.name)}</strong><br><span class="muted small">${escapeHtml(o.id)}</span></td>
+      <td>${o.course_count}</td>
+      <td><a href="${link}" target="_blank" style="color: var(--gold);">${link}</a></td>`;
+    tbody.appendChild(tr);
+
+    const opt = document.createElement("option");
+    opt.value = o.id;
+    opt.textContent = o.name;
+    select.appendChild(opt);
+  });
+}
+
+$("#btn-create-org").addEventListener("click", async () => {
+  const status = $("#org-status");
+  const id = $("#org-id").value.trim();
+  const name = $("#org-name").value.trim();
+  if (!id || !name) {
+    status.textContent = "Both fields are required.";
+    return;
+  }
+  status.textContent = "Saving…";
+  try {
+    const data = await adminApi("/admin/organizations", {
+      method: "POST",
+      body: JSON.stringify({ id, name }),
+    });
+    status.textContent = `Saved. Share link: ${window.location.origin}${data.share_url}`;
+    $("#org-id").value = "";
+    $("#org-name").value = "";
+    await loadOrganizations();
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
   }
 });
 
@@ -35,7 +82,7 @@ async function loadCourses() {
   data.courses.forEach((c) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><strong>${escapeHtml(c.name)}</strong><br><span class="muted small">${escapeHtml(c.id)}</span></td>
+      <td><strong>${escapeHtml(c.name)}</strong><br><span class="muted small">${escapeHtml(c.id)}${c.organization_name ? " &middot; " + escapeHtml(c.organization_name) : ""}</span></td>
       <td>${c.bank_size}</td>
       <td>${c.question_count}</td>
       <td>${c.pass_percent}%</td>
@@ -85,6 +132,7 @@ $("#btn-import").addEventListener("click", async () => {
     question_count: parseInt($("#course-qcount").value, 10),
     pass_percent: parseInt($("#course-pass").value, 10),
     time_limit_min: parseInt($("#course-time").value, 10),
+    organization_id: $("#course-org").value || null,
   };
 
   if (!course.id || !course.name) {
@@ -94,11 +142,15 @@ $("#btn-import").addEventListener("click", async () => {
   }
 
   const replacing = $("#course-replace").checked;
+  const orgLabel = course.organization_id
+    ? $("#course-org").selectedOptions[0].textContent
+    : "Public (general course list)";
   const confirmMsg =
     `About to import into "${course.name}" (${course.id}):\n\n` +
     `• Questions served per attempt: ${course.question_count}\n` +
     `• Time limit: ${course.time_limit_min} minutes\n` +
     `• Pass mark: ${course.pass_percent}%\n` +
+    `• Visibility: ${orgLabel}\n` +
     `• Existing questions: ${replacing ? "will be REPLACED" : "new ones will be added on top"}\n\n` +
     `Continue?`;
 

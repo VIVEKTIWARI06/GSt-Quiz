@@ -24,20 +24,22 @@ export async function onRequestPost({ request, env }) {
 
   // ---- Upsert the course ----
   await env.DB.prepare(
-    `INSERT INTO courses (id, name, question_count, pass_percent, time_limit_min, active)
-     VALUES (?, ?, ?, ?, ?, 1)
+    `INSERT INTO courses (id, name, question_count, pass_percent, time_limit_min, organization_id, active)
+     VALUES (?, ?, ?, ?, ?, ?, 1)
      ON CONFLICT(id) DO UPDATE SET
        name = excluded.name,
        question_count = excluded.question_count,
        pass_percent = excluded.pass_percent,
        time_limit_min = excluded.time_limit_min,
+       organization_id = excluded.organization_id,
        active = 1`
   ).bind(
     course.id,
     course.name,
     course.question_count,
     course.pass_percent ?? 60,
-    course.time_limit_min ?? 60
+    course.time_limit_min ?? 60,
+    course.organization_id || null
   ).run();
 
   // ---- Parse the CSV ----

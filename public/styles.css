@@ -194,3 +194,19 @@ input:focus { outline: 2px solid var(--gold-light); border-color: var(--gold); }
   .card { padding: 26px 20px; }
   h1 { font-size: 23px; }
 }
+
+/* Refresh/close warning modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(8, 26, 46, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+}
+.modal-overlay.hidden { display: none; }
+.modal-box {
+  background: #fff; border-radius: var(--radius); padding: 32px;
+  max-width: 420px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+.modal-box h2 { font-family: var(--serif); color: var(--navy); margin: 0 0 12px; font-size: 20px; }
+.modal-box p { color: var(--muted); font-size: 14px; margin: 0 0 10px; line-height: 1.5; }
+.modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.modal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }

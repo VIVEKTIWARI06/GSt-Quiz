@@ -24,6 +24,21 @@ const show = (id) => {
   document.getElementById(id).classList.add("active");
 };
 
+// ---------- Resume support: remember the in-progress attempt locally so a
+// refresh, accidental tab close, or crash doesn't force a restart. ----------
+const RESUME_KEY = "gst_quiz_active_attempt";
+
+function saveResumeState() {
+  localStorage.setItem(RESUME_KEY, JSON.stringify({
+    token: state.token,
+    attemptId: state.attemptId,
+    courseId: state.selectedCourse?.id,
+  }));
+}
+function clearResumeState() {
+  localStorage.removeItem(RESUME_KEY);
+}
+
 async function api(path, opts = {}) {
   const headers = { "content-type": "application/json", ...(opts.headers || {}) };
   if (state.token) headers.authorization = `Bearer ${state.token}`;
@@ -36,7 +51,8 @@ async function api(path, opts = {}) {
 // ---------- Screen: course selection ----------
 async function loadCourses() {
   try {
-    const data = await api("/courses");
+    const path = state_org ? `/courses?org=${encodeURIComponent(state_org)}` : "/courses";
+    const data = await api(path);
     state.courses = data.courses;
     const list = $("#course-list");
     list.innerHTML = "";
@@ -118,6 +134,7 @@ async function startQuiz() {
   state.answers = {};
   state.currentIndex = 0;
   state.timeLeftSec = data.course.time_limit_min * 60;
+  saveResumeState();
 
   show("screen-quiz");
   renderQuestion();
@@ -192,6 +209,7 @@ async function submitQuiz() {
       method: "POST",
       body: JSON.stringify({ attempt_id: state.attemptId }),
     });
+    clearResumeState();
     showResult(data);
   } catch (err) {
     alert("Couldn't submit quiz: " + err.message);
@@ -228,6 +246,7 @@ $("#btn-email-cert").addEventListener("click", async () => {
 
 $("#btn-restart").addEventListener("click", () => {
   clearInterval(state.timerInterval);
+  clearResumeState();
   Object.assign(state, {
     selectedCourse: null, email: "", token: null, attemptId: null,
     questions: [], answers: {}, currentIndex: 0, timeLeftSec: 0,
@@ -247,4 +266,135 @@ function escapeHtml(s) {
   }[c]));
 }
 
-loadCourses();
+// ---------- Boot sequence: try to resume an interrupted attempt first ----------
+const state_org = new URLSearchParams(window.location.search).get("org");
+
+async function applyOrgBranding() {
+  if (!state_org) return;
+  try {
+    const data = await api(`/organizations?org=${encodeURIComponent(state_org)}`);
+    document.getElementById("org-heading")?.remove(); // avoid duplicates on re-entry
+    const brandName = document.querySelector(".brand-name");
+    if (brandName) brandName.textContent = data.organization.name;
+    const sub = document.querySelector("#screen-course .sub");
+    if (sub) sub.textContent = `Certification assessments for ${data.organization.name}.`;
+  } catch {
+    // Unknown/inactive org slug — fall back to the generic public page silently.
+  }
+}
+async function tryResume() {
+  const saved = localStorage.getItem(RESUME_KEY);
+  if (!saved) return false;
+
+  let parsed;
+  try { parsed = JSON.parse(saved); } catch { clearResumeState(); return false; }
+  if (!parsed.token || !parsed.attemptId) { clearResumeState(); return false; }
+
+  state.token = parsed.token;
+
+  try {
+    const data = await api("/quiz/resume", {
+      method: "POST",
+      body: JSON.stringify({ attempt_id: parsed.attemptId }),
+    });
+
+    if (data.submitted) {
+      // Either they'd already finished, or the time limit quietly expired
+      // while they were away — either way, show the final result.
+      clearResumeState();
+      showResult(data);
+      if (data.time_expired) {
+        // Let them know why they're seeing this instead of a fresh quiz.
+        $("#result-detail").textContent += " (Your time limit ran out while you were away, so this was submitted automatically.)";
+      }
+      return true;
+    }
+
+    // Genuinely resumable — rehydrate exactly where they left off.
+    state.attemptId = data.attempt_id;
+    state.selectedCourse = data.course;
+    state.questions = data.questions;
+    state.answers = data.answers || {};
+    state.currentIndex = 0;
+    state.timeLeftSec = data.remaining_seconds;
+
+    show("screen-quiz");
+    renderQuestion();
+    startTimer();
+    return true;
+  } catch {
+    // Token expired, attempt not found, etc — just start fresh, quietly.
+    clearResumeState();
+    return false;
+  }
+}
+
+(async () => {
+  await applyOrgBranding();
+  const resumed = await tryResume();
+  if (!resumed) loadCourses();
+})();
+
+// ---------- Refresh / close warning during an active quiz ----------
+function quizIsActive() {
+  return state.attemptId && document.getElementById("screen-quiz")?.classList.contains("active");
+}
+
+// Layer 1: catches the browser's own refresh button, closing the tab/window,
+// navigating away, or the OS closing the browser. Browsers deliberately don't
+// allow custom text here (a security restriction, not a limitation of this
+// code) — but the native "leave site?" prompt itself still appears.
+window.addEventListener("beforeunload", (e) => {
+  if (!quizIsActive()) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
+
+// Layer 2: F5 / Ctrl+R / Cmd+R specifically CAN be fully intercepted (they're
+// just key presses until the browser acts on them), so these get a proper
+// custom popup with a real 10-second hold before allowing it through.
+let refreshCountdownInterval = null;
+
+function showRefreshWarning() {
+  const overlay = $("#refresh-warning-overlay");
+  const btnForce = $("#btn-force-refresh");
+  if (!overlay) return;
+  overlay.classList.remove("hidden");
+
+  let secondsLeft = 10;
+  btnForce.disabled = true;
+  btnForce.textContent = `Reload anyway (${secondsLeft})`;
+
+  clearInterval(refreshCountdownInterval);
+  refreshCountdownInterval = setInterval(() => {
+    secondsLeft--;
+    if (secondsLeft <= 0) {
+      clearInterval(refreshCountdownInterval);
+      btnForce.disabled = false;
+      btnForce.textContent = "Reload anyway";
+    } else {
+      btnForce.textContent = `Reload anyway (${secondsLeft})`;
+    }
+  }, 1000);
+}
+
+function hideRefreshWarning() {
+  clearInterval(refreshCountdownInterval);
+  $("#refresh-warning-overlay")?.classList.add("hidden");
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!quizIsActive()) return;
+  const isRefreshKey = e.key === "F5" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "r");
+  if (isRefreshKey) {
+    e.preventDefault();
+    showRefreshWarning();
+  }
+});
+
+$("#btn-continue-quiz")?.addEventListener("click", hideRefreshWarning);
+$("#btn-force-refresh")?.addEventListener("click", () => {
+  if ($("#btn-force-refresh").disabled) return;
+  hideRefreshWarning();
+  window.location.reload();
+});

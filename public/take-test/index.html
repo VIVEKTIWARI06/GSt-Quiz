@@ -90,6 +90,19 @@
   </footer>
 </div>
 
+<!-- Shown only when F5 / Ctrl+R / Cmd+R is pressed during an active quiz -->
+<div id="refresh-warning-overlay" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>Don't refresh mid-quiz</h2>
+    <p>Refreshing can interrupt your timer and connection. Your answers are saved automatically, so you likely won't lose progress — but it's safer to just continue.</p>
+    <p class="muted small" id="refresh-countdown-text">You can proceed in 10 seconds if you really need to.</p>
+    <div class="modal-actions">
+      <button id="btn-continue-quiz" class="btn-primary">Continue my quiz</button>
+      <button id="btn-force-refresh" class="btn-secondary" disabled>Reload anyway (10)</button>
+    </div>
+  </div>
+</div>
+
 <script src="/app.js"></script>
 </body>
 </html>

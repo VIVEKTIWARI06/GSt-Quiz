@@ -9,6 +9,18 @@ DROP TABLE IF EXISTS otp_codes;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS questions;
 DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS organizations;
+
+-- Institutions/clients who get their own branded, filtered link
+-- (e.g. gstreturn.org/take-test/?org=bluecrest). Courses assigned to an
+-- organization only show up on that org's link, not the public course list.
+CREATE TABLE organizations (
+  id            TEXT PRIMARY KEY,        -- slug, e.g. 'bluecrest'
+  name          TEXT NOT NULL,           -- 'BlueCrest University'
+  logo_url      TEXT,
+  active        INTEGER NOT NULL DEFAULT 1,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
 -- One row per course/question-bank (e.g. "Basic GST", "GST Returns Filing", "Advanced GST")
 CREATE TABLE courses (
@@ -18,6 +30,7 @@ CREATE TABLE courses (
   pass_percent  INTEGER NOT NULL DEFAULT 60,
   time_limit_min INTEGER NOT NULL DEFAULT 60,
   active        INTEGER NOT NULL DEFAULT 1,
+  organization_id TEXT REFERENCES organizations(id), -- NULL = public course, shown on the general list
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

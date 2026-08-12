@@ -56,6 +56,12 @@
         <label>Pass %<input type="number" id="course-pass" value="60" /></label>
         <label>Time limit (min)<input type="number" id="course-time" value="30" /></label>
         <label>
+          Organization (optional)
+          <select id="course-org">
+            <option value="">Public — shows on the general course list</option>
+          </select>
+        </label>
+        <label>
           <input type="checkbox" id="course-replace" style="width:auto;display:inline-block;margin-right:6px;" />
           Replace all existing questions for this course (instead of adding to them)
         </label>
@@ -74,6 +80,22 @@
 
       <button id="btn-import" class="btn-primary" style="margin-top: 12px;">Import questions</button>
       <div id="import-result" class="result-box hidden"></div>
+
+      <h2 style="margin-top: 40px;">Organizations (client-specific test links)</h2>
+      <p class="sub">Create a link that only shows specific test(s) to one institution/client — e.g. gstreturn.org/take-test/?org=bluecrest.</p>
+      <div class="admin-grid">
+        <label>Organization ID (slug)<input type="text" id="org-id" placeholder="e.g. bluecrest" /></label>
+        <label>Organization name<input type="text" id="org-name" placeholder="e.g. BlueCrest University" /></label>
+      </div>
+      <button id="btn-create-org" class="btn-secondary">Create / update organization</button>
+      <p class="muted small" id="org-status"></p>
+
+      <table id="orgs-table" style="margin-top: 16px;">
+        <thead>
+          <tr><th>Organization</th><th>Assigned courses</th><th>Shareable link</th></tr>
+        </thead>
+        <tbody id="orgs-tbody"></tbody>
+      </table>
 
       <h2 style="margin-top: 40px;">Backups</h2>
       <p class="sub">A full backup emails itself automatically every Sunday. You can also trigger one right now.</p>
