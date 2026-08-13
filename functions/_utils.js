@@ -84,18 +84,26 @@ export async function sendEmail(env, { to, subject, html, attachment }) {
       { filename: attachment.filename, content: attachment.base64 },
     ];
   }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    console.error("Resend error", await res.text());
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      console.error("Resend error", await res.text());
+    }
+    return res.ok;
+  } catch (e) {
+    // Resend unreachable entirely (outage, DNS failure, etc). Never let this
+    // crash the caller — students still have the Telegram OTP fallback and
+    // the emergency bypass code as alternate paths in.
+    console.error("Resend request failed entirely", e);
+    return false;
   }
-  return res.ok;
 }
 
 // ---------- Telegram ----------
@@ -104,31 +112,44 @@ export async function sendEmail(env, { to, subject, html, attachment }) {
 // https://api.telegram.org/bot<token>/getUpdates
 export async function sendTelegramMessage(env, text) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return false;
-  const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      chat_id: env.TELEGRAM_CHAT_ID,
-      text,
-      parse_mode: "HTML",
-    }),
-  });
-  return res.ok;
+  try {
+    const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        chat_id: env.TELEGRAM_CHAT_ID,
+        text,
+        parse_mode: "HTML",
+      }),
+    });
+    return res.ok;
+  } catch (e) {
+    // Telegram unreachable entirely — never let this crash the caller,
+    // exactly like the email failure handling above. Each channel is fully
+    // independent of the other's availability.
+    console.error("Telegram request failed entirely", e);
+    return false;
+  }
 }
 
 // Sends a document to a specific chat (used for handing the certificate
 // back to the STUDENT over Telegram, if they gave a chat id — see certificate.js)
 export async function sendTelegramDocument(env, chatId, base64, filename, caption) {
   if (!env.TELEGRAM_BOT_TOKEN || !chatId) return false;
-  const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendDocument`;
-  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-  const form = new FormData();
-  form.append("chat_id", chatId);
-  form.append("caption", caption || "");
-  form.append("document", new Blob([bytes], { type: "application/pdf" }), filename);
-  const res = await fetch(url, { method: "POST", body: form });
-  return res.ok;
+  try {
+    const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendDocument`;
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const form = new FormData();
+    form.append("chat_id", chatId);
+    form.append("caption", caption || "");
+    form.append("document", new Blob([bytes], { type: "application/pdf" }), filename);
+    const res = await fetch(url, { method: "POST", body: form });
+    return res.ok;
+  } catch (e) {
+    console.error("Telegram document send failed entirely", e);
+    return false;
+  }
 }
 
 // ---------- Google Sheet backup (Apps Script Web App) ----------

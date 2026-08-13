@@ -36,7 +36,7 @@ export async function onRequestPost({ request, env }) {
     "INSERT INTO otp_codes (email, code, expires_at) VALUES (?, ?, ?)"
   ).bind(email, code, expiresAt).run();
 
-  await sendEmail(env, {
+  const emailed = await sendEmail(env, {
     to: email,
     subject: `Your verification code: ${code}`,
     html: `<p>Hi ${escapeHtml(name)},</p>
@@ -56,7 +56,7 @@ export async function onRequestPost({ request, env }) {
     timestamp: new Date().toISOString(),
   });
 
-  return json({ ok: true, message: "OTP sent to email" });
+  return json({ ok: true, email_sent: emailed });
 }
 
 function escapeHtml(s) {

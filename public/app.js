@@ -3,7 +3,7 @@
 // Talks to the same-origin API under /api/* (Cloudflare Pages Functions).
 // ============================================================
 
-const TELEGRAM_BOT_USERNAME = "Wowtax_bot"; // <-- set this after creating your bot
+const TELEGRAM_BOT_USERNAME = "YourGstQuizBot"; // <-- set this after creating your bot
 
 const state = {
   courses: [],
@@ -87,6 +87,11 @@ async function loadCourses() {
   }
 }
 
+function base64UrlEncode(str) {
+  const b64 = btoa(unescape(encodeURIComponent(str)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 // ---------- Screen: lead capture ----------
 $("#lead-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -95,11 +100,25 @@ $("#lead-form").addEventListener("submit", async (e) => {
   const mobile = $("#lead-mobile").value.trim();
   $("#lead-error").textContent = "";
   try {
-    await api("/lead", {
+    const data = await api("/lead", {
       method: "POST",
       body: JSON.stringify({ name, email, mobile, course_id: state.selectedCourse.id }),
     });
     state.email = email;
+
+    const telegramLink = $("#telegram-otp-link");
+    if (telegramLink) {
+      telegramLink.href = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=otp_${base64UrlEncode(email)}`;
+    }
+
+    const statusEl = $("#otp-delivery-status");
+    if (statusEl) {
+      statusEl.textContent = data.email_sent
+        ? "We've sent a code to your email. You can also get it on Telegram — use whichever works for you."
+        : "We couldn't send the email right now — please use Telegram to get your code instead.";
+      statusEl.style.color = data.email_sent ? "" : "var(--danger)";
+    }
+
     show("screen-otp");
   } catch (err) {
     $("#lead-error").textContent = err.message;

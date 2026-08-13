@@ -46,8 +46,11 @@
     <!-- Screen: OTP verify -->
     <section id="screen-otp" class="screen">
       <button class="back-link" data-back="screen-lead">&larr; Edit details</button>
-      <h1>Check your email</h1>
-      <p class="sub">Enter the 6-digit code we just sent you.</p>
+      <h1>Check your email or Telegram</h1>
+      <p class="sub" id="otp-delivery-status">We've sent a code to your email. You can also get it on Telegram — use whichever works for you.</p>
+      <div class="delivery-options">
+        <a id="telegram-otp-link" href="#" target="_blank" class="btn-secondary" style="display:block;text-align:center;margin-bottom:20px;">Open Telegram to get your code</a>
+      </div>
       <form id="otp-form">
         <label>Verification code<input type="text" id="otp-code" inputmode="numeric" maxlength="6" required placeholder="123456" /></label>
         <button type="submit" class="btn-primary">Verify &amp; start quiz</button>
