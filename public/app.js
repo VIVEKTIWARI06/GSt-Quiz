@@ -3,7 +3,7 @@
 // Talks to the same-origin API under /api/* (Cloudflare Pages Functions).
 // ============================================================
 
-const TELEGRAM_BOT_USERNAME = "wowtax_bot"; // <-- set this after creating your bot
+const TELEGRAM_BOT_USERNAME = "Wowtax_bot"; // no @ symbol, exact case, matches t.me/Wowtax_bot
 
 const state = {
   courses: [],
