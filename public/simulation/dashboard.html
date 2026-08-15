@@ -198,17 +198,44 @@
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     cells.push(`${months[d.getMonth()]}-${d.getFullYear()}`);
   }
+  // Read registration data (if any) from the same localStorage the
+  // registration wizard writes to, so this dashboard reflects reality
+  // instead of always showing "Not Registered."
+  const regState = JSON.parse(localStorage.getItem("gst_sim_registration") || "{}");
+  const isRegistered = !!regState.gstin;
   const rows = ["GSTR-1 / IFF", "GSTR-3B"];
+
   const tbody = document.getElementById("calendar-body");
   rows.forEach((label) => {
     const tr = document.createElement("tr");
     let html = `<th class="row-label">${label}</th>`;
-    cells.forEach((c) => {
-      html += `<td><span class="period">${c}</span><span class="status">NA - Not Registered</span></td>`;
+    cells.forEach((c, idx) => {
+      const cellDate = new Date(now.getFullYear(), now.getMonth() - (4 - idx), 1);
+      const cellYm = cellDate.toISOString().slice(0, 7);
+      let status;
+      if (!isRegistered || cellYm < regState.registeredMonth) {
+        status = "NA - Not Registered";
+      } else if (cellYm === now.toISOString().slice(0, 7)) {
+        status = "Not Filed - Due Soon";
+      } else {
+        status = "Not Filed";
+      }
+      const statusColor = status === "NA - Not Registered" ? "#b4324a" : "#c47a00";
+      html += `<td><span class="period">${c}</span><span class="status" style="color:${statusColor};">${status}</span></td>`;
     });
     tr.innerHTML = html;
     tbody.appendChild(tr);
   });
+
+  if (isRegistered) {
+    document.getElementById("welcome-heading").textContent = `Welcome ${regState.legalName || "back"} to the GST Practice Portal`;
+    document.getElementById("sidebar-name").textContent = regState.legalName || "Registered Business";
+    document.getElementById("student-name-display").textContent = (regState.legalName || "Business") + " ▾";
+    const prefEl = document.querySelector(".card .pref");
+    if (prefEl) {
+      prefEl.innerHTML = `GSTIN: <strong>${regState.gstin}</strong> &nbsp;|&nbsp; Return filing preference (this quarter): Monthly <a href="#">(Change)</a>`;
+    }
+  }
 
   // If a student name was passed in via ?name=..., personalize the greeting.
   const params = new URLSearchParams(window.location.search);

@@ -414,6 +414,8 @@ function renderStep6() {
         <h2>Application Submitted (Simulation)</h2>
         <p class="sub">Your practice Application Reference Number (ARN):</p>
         <div class="arn">${state.arn}</div>
+        <p class="sub">Simulated GSTIN (as if approved):</p>
+        <div class="arn" style="color:#14b8a6;">${state.gstin}</div>
         <p class="sub">In the real portal, GST officers review this within a few working days and either approve it (issuing a GSTIN) or raise a query. This is a fixed part of the training — no real application was filed anywhere.</p>
         <button class="btn btn-teal" onclick="startOver()">Start a New Practice Application</button>
         &nbsp;
@@ -441,6 +443,14 @@ function finalSubmit() {
   state.submitted = true;
   const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
   state.arn = `AA${new Date().getFullYear()}${rand}`;
+  // Simulated GSTIN, same 15-character format as real ones:
+  // 2-digit state code + 10-char PAN + entity code + Z + checksum char
+  const stateCodes = { "Uttar Pradesh": "09", "Delhi": "07", "Maharashtra": "27", "Karnataka": "29", "Tamil Nadu": "33", "West Bengal": "19", "Gujarat": "24", "Rajasthan": "08", "Bihar": "10" };
+  const sc = stateCodes[state.state] || "09";
+  const panPart = (state.pan || "ABCDE1234F").padEnd(10, "X").slice(0, 10);
+  const checksum = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 36)];
+  state.gstin = `${sc}${panPart}1Z${checksum}`;
+  state.registeredMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
   save();
   render();
 }
