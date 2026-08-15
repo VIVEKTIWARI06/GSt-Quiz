@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GSTR-3B Filing Simulation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .topbar p { font-size: 11px; opacity: 0.8; }
+  .topbar a { color: #fff; font-size: 12px; text-decoration: none; }
+
+  .wrap { max-width: 900px; margin: 24px auto; padding: 0 20px 60px; }
+
+  .stepper { display: flex; background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; overflow: hidden; margin-bottom: 20px; flex-wrap: wrap; }
+  .step { flex: 1; min-width: 110px; text-align: center; padding: 10px 6px; font-size: 11px; color: #888; border-right: 1px solid #dbe0e6; }
+  .step:last-child { border-right: none; }
+  .step .num { display: block; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; background: #dbe0e6; color: #fff; margin: 0 auto 4px; font-weight: bold; font-size: 11px; }
+  .step.active { color: #1b3a73; font-weight: bold; }
+  .step.active .num { background: #14b8a6; }
+  .step.done .num { background: #1b3a73; }
+  .step.done { color: #1b3a73; }
+
+  .card { background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; padding: 26px; }
+  .card h2 { color: #1b3a73; font-size: 18px; margin-bottom: 4px; }
+  .card .sub { font-size: 13px; color: #666; margin-bottom: 18px; }
+
+  label { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 4px; margin-top: 12px; }
+  input, select { width: 100%; padding: 8px 9px; border: 1px solid #c3c9d1; border-radius: 3px; font-size: 13px; }
+  input:focus, select:focus { outline: 2px solid #14b8a6; border-color: #14b8a6; }
+  input[readonly] { background: #f4f6f9; color: #555; }
+
+  table.tax-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  table.tax-table th { background: #f4f6f9; padding: 8px 6px; text-align: left; border-bottom: 2px solid #dbe0e6; }
+  table.tax-table td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+  table.tax-table input { width: 100px; padding: 5px 7px; }
+
+  .btn { padding: 9px 16px; border: none; border-radius: 3px; font-size: 13px; font-weight: bold; cursor: pointer; }
+  .btn-primary { background: #1b3a73; color: #fff; }
+  .btn-secondary { background: #fff; color: #1b3a73; border: 1px solid #1b3a73; }
+  .nav-row { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; }
+
+  .summary-box { background: #f4f6f9; border-radius: 4px; padding: 14px 16px; margin-top: 16px; font-size: 13px; }
+  .summary-box .row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .summary-box .total { font-weight: bold; border-top: 1px solid #dbe0e6; margin-top: 6px; padding-top: 8px; }
+  .summary-box.warn { background: #fff4d6; }
+  .summary-box.ok { background: #e3f7f0; }
+
+  .auto-note { background: #eef6fd; border: 1px solid #bcd9f0; padding: 10px 12px; font-size: 12px; border-radius: 3px; margin-bottom: 14px; }
+
+  .success-box { text-align: center; padding: 30px 10px; }
+  .success-box .check { width: 60px; height: 60px; border-radius: 50%; background: #e3f7f0; color: #14b8a6; font-size: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .arn { font-size: 20px; font-weight: bold; color: #1b3a73; letter-spacing: 1px; margin: 12px 0; }
+
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.</div>
+<div class="topbar">
+  <div><h1>GSTR-3B — Monthly Summary Return</h1><p id="period-label">A free training simulation — gstreturn.org</p></div>
+  <a href="returns.html">&larr; Back to Returns Dashboard</a>
+</div>
+
+<div class="wrap">
+  <div class="stepper" id="stepper"></div>
+  <div class="card" id="card-content"></div>
+</div>
+
+<div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const period = params.get("period") || "practice";
+document.getElementById("period-label").textContent = `Return period: ${period}`;
+
+const STORAGE_KEY = `gst_sim_gstr3b_${period}`;
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+state.step = state.step || 0;
+state.outward = state.outward || null; // filled from GSTR-1 or manual entry
+state.itc = state.itc || { igst: 0, cgst: 0, sgst: 0 };
+state.exemptInward = state.exemptInward || 0;
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+const inr = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+const steps = ["Outward Supplies", "Eligible ITC", "Exempt Inward Supplies", "Payment of Tax", "Preview & File"];
+function renderStepper() {
+  document.getElementById("stepper").innerHTML = steps.map((label, i) => {
+    const cls = i === state.step ? "active" : i < state.step ? "done" : "";
+    return `<div class="step ${cls}"><span class="num">${i < state.step ? "✓" : i + 1}</span>${label}</div>`;
+  }).join("");
+}
+function goTo(step) { state.step = step; save(); render(); window.scrollTo(0, 0); }
+
+// ============================================================
+// Step 0: Outward Supplies (3.1) — auto-pulled from GSTR-1 if filed for this period
+// ============================================================
+function computeFromGstr1() {
+  const g1 = JSON.parse(localStorage.getItem(`gst_sim_gstr1_${period}`) || "null");
+  if (!g1 || !g1.filed) return null;
+  const regState = JSON.parse(localStorage.getItem("gst_sim_registration") || "{}");
+  const ownState = regState.state || "Uttar Pradesh";
+  function taxSplit(taxableValue, rate, supplyState) {
+    const totalTax = (taxableValue * rate) / 100;
+    return supplyState === ownState
+      ? { igst: 0, cgst: totalTax / 2, sgst: totalTax / 2 }
+      : { igst: totalTax, cgst: 0, sgst: 0 };
+  }
+  let taxableTotal = 0, igst = 0, cgst = 0, sgst = 0;
+  (g1.b2b || []).forEach((inv) => {
+    taxableTotal += inv.taxableValue;
+    const t = taxSplit(inv.taxableValue, inv.rate, inv.pos);
+    igst += t.igst; cgst += t.cgst; sgst += t.sgst;
+  });
+  (g1.b2cs || []).forEach((r) => {
+    taxableTotal += r.taxableValue;
+    const t = taxSplit(r.taxableValue, r.rate, r.state);
+    igst += t.igst; cgst += t.cgst; sgst += t.sgst;
+  });
+  return { taxableValue: taxableTotal, igst, cgst, sgst, fromGstr1: true };
+}
+
+function renderStep0() {
+  const auto = computeFromGstr1();
+  if (auto && !state.outward) { state.outward = auto; save(); }
+  const o = state.outward || { taxableValue: 0, igst: 0, cgst: 0, sgst: 0 };
+  const readonly = o.fromGstr1 ? "readonly" : "";
+
+  return `
+    <h2>3.1 — Outward Taxable Supplies</h2>
+    <p class="sub">Summary of tax on sales made this period.</p>
+    ${o.fromGstr1 ? `<div class="auto-note">✓ These values were pulled automatically from your filed GSTR-1 for ${period}.</div>` : `<div class="auto-note">No GSTR-1 filed for ${period} yet — enter these totals manually, or go file GSTR-1 first for them to auto-fill.</div>`}
+    <table class="tax-table">
+      <thead><tr><th></th><th>Taxable Value</th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Outward supplies</td>
+          <td><input id="f-taxval" type="number" value="${o.taxableValue}" ${readonly} /></td>
+          <td><input id="f-igst" type="number" value="${o.igst.toFixed(2)}" ${readonly} /></td>
+          <td><input id="f-cgst" type="number" value="${o.cgst.toFixed(2)}" ${readonly} /></td>
+          <td><input id="f-sgst" type="number" value="${o.sgst.toFixed(2)}" ${readonly} /></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="nav-row">
+      <a href="returns.html" class="btn btn-secondary" style="text-decoration:none;display:inline-block;">Save Draft &amp; Exit</a>
+      <button class="btn btn-primary" onclick="submitStep0()">Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep0() {
+  if (!state.outward || !state.outward.fromGstr1) {
+    state.outward = {
+      taxableValue: Number(document.getElementById("f-taxval").value) || 0,
+      igst: Number(document.getElementById("f-igst").value) || 0,
+      cgst: Number(document.getElementById("f-cgst").value) || 0,
+      sgst: Number(document.getElementById("f-sgst").value) || 0,
+    };
+  }
+  save();
+  goTo(1);
+}
+
+// ============================================================
+// Step 1: Eligible ITC
+// ============================================================
+function renderStep1() {
+  return `
+    <h2>4 — Eligible Input Tax Credit</h2>
+    <p class="sub">ITC available to you this period, from purchases and expenses.</p>
+    <table class="tax-table">
+      <thead><tr><th></th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>ITC Available</td>
+          <td><input id="f-itc-igst" type="number" value="${state.itc.igst}" /></td>
+          <td><input id="f-itc-cgst" type="number" value="${state.itc.cgst}" /></td>
+          <td><input id="f-itc-sgst" type="number" value="${state.itc.sgst}" /></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(0)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep1()">Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep1() {
+  state.itc = {
+    igst: Number(document.getElementById("f-itc-igst").value) || 0,
+    cgst: Number(document.getElementById("f-itc-cgst").value) || 0,
+    sgst: Number(document.getElementById("f-itc-sgst").value) || 0,
+  };
+  save();
+  goTo(2);
+}
+
+// ============================================================
+// Step 2: Exempt Inward Supplies
+// ============================================================
+function renderStep2() {
+  return `
+    <h2>5 — Values of Exempt, Nil-Rated &amp; Non-GST Inward Supplies</h2>
+    <p class="sub">Purchases this period that had no GST on them.</p>
+    <label>Total Value (₹)</label>
+    <input id="f-exempt" type="number" min="0" value="${state.exemptInward}" />
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(1)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep2()">Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep2() {
+  state.exemptInward = Number(document.getElementById("f-exempt").value) || 0;
+  save();
+  goTo(3);
+}
+
+// ============================================================
+// Step 3: Payment of Tax — real cross-utilization logic
+// ============================================================
+function computeUtilization() {
+  const liability = state.outward;
+  let igstItc = state.itc.igst, cgstItc = state.itc.cgst, sgstItc = state.itc.sgst;
+  let igstLiab = liability.igst, cgstLiab = liability.cgst, sgstLiab = liability.sgst;
+
+  // IGST liability: pay from IGST ITC first
+  const useIgstForIgst = Math.min(igstItc, igstLiab);
+  igstItc -= useIgstForIgst; igstLiab -= useIgstForIgst;
+
+  // CGST liability: pay from CGST ITC first, then leftover IGST ITC
+  const useCgstForCgst = Math.min(cgstItc, cgstLiab);
+  cgstItc -= useCgstForCgst; cgstLiab -= useCgstForCgst;
+  const useIgstForCgst = Math.min(igstItc, cgstLiab);
+  igstItc -= useIgstForCgst; cgstLiab -= useIgstForCgst;
+
+  // SGST liability: pay from SGST ITC first, then leftover IGST ITC
+  const useSgstForSgst = Math.min(sgstItc, sgstLiab);
+  sgstItc -= useSgstForSgst; sgstLiab -= useSgstForSgst;
+  const useIgstForSgst = Math.min(igstItc, sgstLiab);
+  igstItc -= useIgstForSgst; sgstLiab -= useIgstForSgst;
+
+  return {
+    cashIgst: igstLiab, cashCgst: cgstLiab, cashSgst: sgstLiab,
+    cashTotal: igstLiab + cgstLiab + sgstLiab,
+    itcUtilized: (useIgstForIgst + useIgstForCgst + useIgstForSgst) + useCgstForCgst + useSgstForSgst,
+    leftoverItc: { igst: igstItc, cgst: cgstItc, sgst: sgstItc },
+  };
+}
+
+function renderStep3() {
+  const u = computeUtilization();
+  return `
+    <h2>6.1 — Payment of Tax</h2>
+    <p class="sub">ITC is used first (IGST credit can cover any head; CGST/SGST credit can only cover their own head, then IGST). Any shortfall must be paid in cash.</p>
+    <div class="summary-box">
+      <div class="row"><span>Total Tax Liability</span><strong>${inr(state.outward.igst + state.outward.cgst + state.outward.sgst)}</strong></div>
+      <div class="row"><span>ITC Utilized</span><strong>${inr(u.itcUtilized)}</strong></div>
+      <div class="row total"><span>Cash Required</span><strong>${inr(u.cashTotal)}</strong></div>
+    </div>
+    <table class="tax-table" style="margin-top:16px;">
+      <thead><tr><th></th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
+      <tbody>
+        <tr><td>Paid via ITC</td><td>${inr(state.outward.igst - u.cashIgst)}</td><td>${inr(state.outward.cgst - u.cashCgst)}</td><td>${inr(state.outward.sgst - u.cashSgst)}</td></tr>
+        <tr><td>Paid via Cash</td><td>${inr(u.cashIgst)}</td><td>${inr(u.cashCgst)}</td><td>${inr(u.cashSgst)}</td></tr>
+        <tr><td>Leftover ITC (carried forward)</td><td>${inr(u.leftoverItc.igst)}</td><td>${inr(u.leftoverItc.cgst)}</td><td>${inr(u.leftoverItc.sgst)}</td></tr>
+      </tbody>
+    </table>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(2)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Continue to Preview &rarr;</button>
+    </div>
+  `;
+}
+
+// ============================================================
+// Step 4: Preview & File
+// ============================================================
+function renderStep4() {
+  if (state.filed) {
+    return `
+      <div class="success-box">
+        <div class="check">✓</div>
+        <h2>GSTR-3B Filed (Simulation)</h2>
+        <p class="sub">Acknowledgement Reference Number:</p>
+        <div class="arn">${state.arn}</div>
+        <p class="sub">This is training data only — no real return was filed and no real payment was made.</p>
+        <a href="returns.html" class="btn btn-primary" style="text-decoration:none;display:inline-block;">Back to Returns Dashboard</a>
+      </div>
+    `;
+  }
+  const u = computeUtilization();
+  return `
+    <h2>Preview &amp; File GSTR-3B</h2>
+    <p class="sub">Final review for ${period} before filing.</p>
+    <div class="summary-box ${u.cashTotal > 0 ? "warn" : "ok"}">
+      <div class="row"><span>Total Tax Liability</span><strong>${inr(state.outward.igst + state.outward.cgst + state.outward.sgst)}</strong></div>
+      <div class="row"><span>Total ITC Utilized</span><strong>${inr(u.itcUtilized)}</strong></div>
+      <div class="row total"><span>Cash to be Paid</span><strong>${inr(u.cashTotal)}</strong></div>
+    </div>
+    <p class="sub" style="margin-top:16px;">${u.cashTotal > 0 ? "In the real portal, you'd generate a challan and pay this via net banking/NEFT/RTGS before filing. Here, filing simulates that payment automatically." : "Fully covered by ITC — no cash payment needed this period."}</p>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(3)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="fileReturn()">${u.cashTotal > 0 ? "Pay & File GSTR-3B (Simulation)" : "File GSTR-3B (Simulation)"}</button>
+    </div>
+  `;
+}
+function fileReturn() {
+  state.filed = true;
+  const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
+  state.arn = `AC${new Date().getFullYear()}${rand}`;
+  save();
+  localStorage.setItem(`gst_sim_filed_gstr3b_${period}`, "1");
+  render();
+}
+
+// ============================================================
+function render() {
+  renderStepper();
+  const renderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4];
+  document.getElementById("card-content").innerHTML = renderers[state.step]();
+}
+render();
+</script>
+
+</body>
+</html>

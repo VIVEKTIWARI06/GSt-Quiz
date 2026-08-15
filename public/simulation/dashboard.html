@@ -111,7 +111,7 @@
     </div>
   </div>
   <div class="right">
-    <button class="register-btn" onclick="window.location.href='register.html'">Register</button>
+    <button class="register-btn" id="register-btn" onclick="window.location.href='register.html'">Register</button>
     <span id="student-name-display">Student &#9662;</span>
   </div>
 </div>
@@ -154,15 +154,15 @@
       </div>
 
       <div class="action-row">
-        <button class="action-btn" onclick="alert('Return filing simulation — coming next. This will walk through a practice GSTR-3B step by step.')">Return Dashboard &rarr;</button>
-        <button class="action-btn" onclick="alert('Challan creation simulation — coming next.')">Create Challan &rarr;</button>
-        <button class="action-btn" onclick="alert('Notices simulation — coming next.')">View Notice(s) &amp; Order(s) &rarr;</button>
+        <button class="action-btn" onclick="window.location.href='returns.html'">Return Dashboard &rarr;</button>
+        <button class="action-btn" onclick="alert('Challan creation simulation is a future addition — not part of this training module yet.')">Create Challan &rarr;</button>
+        <button class="action-btn" onclick="alert('Notices simulation is a future addition — not part of this training module yet.')">View Notice(s) &amp; Order(s) &rarr;</button>
         <button class="action-btn" disabled>Annual Return &rarr;</button>
       </div>
 
       <div class="else-row">
         <span>Else go to &raquo;</span>
-        <button class="action-btn primary" onclick="alert('This will lead into the full simulated dashboard flow.')">Continue to Dashboard &rarr;</button>
+        <button class="action-btn primary" onclick="window.location.href='returns.html'">Continue to Dashboard &rarr;</button>
       </div>
     </div>
   </div>
@@ -189,39 +189,44 @@
 <div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
 
 <script>
-  // Populate the returns calendar with the last 5 months relative to today,
-  // and mark all as "NA - Not Registered" since this is a fresh practice account.
+  // Populate the returns calendar with the last 5 months relative to today.
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const now = new Date();
+
+  // IMPORTANT: use local year/month directly rather than toISOString() —
+  // toISOString() converts to UTC, which shifts the date backward by a day
+  // for any timezone ahead of UTC (like India, UTC+5:30), silently landing
+  // on the wrong month right at month boundaries. This helper avoids that.
+  function ym(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }
+
   let cells = [];
   for (let i = 4; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    cells.push(`${months[d.getMonth()]}-${d.getFullYear()}`);
+    cells.push({ label: `${months[d.getMonth()]}-${d.getFullYear()}`, ym: ym(d) });
   }
-  // Read registration data (if any) from the same localStorage the
-  // registration wizard writes to, so this dashboard reflects reality
-  // instead of always showing "Not Registered."
+
   const regState = JSON.parse(localStorage.getItem("gst_sim_registration") || "{}");
   const isRegistered = !!regState.gstin;
   const rows = ["GSTR-1 / IFF", "GSTR-3B"];
+  const currentYm = ym(now);
 
   const tbody = document.getElementById("calendar-body");
   rows.forEach((label) => {
     const tr = document.createElement("tr");
     let html = `<th class="row-label">${label}</th>`;
-    cells.forEach((c, idx) => {
-      const cellDate = new Date(now.getFullYear(), now.getMonth() - (4 - idx), 1);
-      const cellYm = cellDate.toISOString().slice(0, 7);
+    cells.forEach((cell) => {
       let status;
-      if (!isRegistered || cellYm < regState.registeredMonth) {
+      if (!isRegistered || cell.ym < regState.registeredMonth) {
         status = "NA - Not Registered";
-      } else if (cellYm === now.toISOString().slice(0, 7)) {
+      } else if (cell.ym === currentYm) {
         status = "Not Filed - Due Soon";
       } else {
         status = "Not Filed";
       }
       const statusColor = status === "NA - Not Registered" ? "#b4324a" : "#c47a00";
-      html += `<td><span class="period">${c}</span><span class="status" style="color:${statusColor};">${status}</span></td>`;
+      html += `<td><span class="period">${cell.label}</span><span class="status" style="color:${statusColor};">${status}</span></td>`;
     });
     tr.innerHTML = html;
     tbody.appendChild(tr);
@@ -235,12 +240,16 @@
     if (prefEl) {
       prefEl.innerHTML = `GSTIN: <strong>${regState.gstin}</strong> &nbsp;|&nbsp; Return filing preference (this quarter): Monthly <a href="#">(Change)</a>`;
     }
+    // Already registered — a "Register" button doesn't make sense anymore.
+    const registerBtn = document.getElementById("register-btn");
+    if (registerBtn) registerBtn.style.display = "none";
   }
 
-  // If a student name was passed in via ?name=..., personalize the greeting.
+  // If a student name was passed in via ?name=..., personalize the greeting
+  // (only when not already personalized by a real registration above).
   const params = new URLSearchParams(window.location.search);
   const name = params.get("name");
-  if (name) {
+  if (name && !isRegistered) {
     document.getElementById("welcome-heading").textContent = `Welcome ${name} to the GST Practice Portal`;
     document.getElementById("student-name-display").textContent = name + " ▾";
     document.getElementById("sidebar-name").textContent = name;

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GSTR-1 Filing Simulation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .topbar p { font-size: 11px; opacity: 0.8; }
+  .topbar a { color: #fff; font-size: 12px; text-decoration: none; }
+
+  .wrap { max-width: 960px; margin: 24px auto; padding: 0 20px 60px; }
+
+  .stepper { display: flex; background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; overflow: hidden; margin-bottom: 20px; flex-wrap: wrap; }
+  .step { flex: 1; min-width: 110px; text-align: center; padding: 10px 6px; font-size: 11px; color: #888; border-right: 1px solid #dbe0e6; }
+  .step:last-child { border-right: none; }
+  .step .num { display: block; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; background: #dbe0e6; color: #fff; margin: 0 auto 4px; font-weight: bold; font-size: 11px; }
+  .step.active { color: #1b3a73; font-weight: bold; }
+  .step.active .num { background: #14b8a6; }
+  .step.done .num { background: #1b3a73; }
+  .step.done { color: #1b3a73; }
+
+  .card { background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; padding: 26px; }
+  .card h2 { color: #1b3a73; font-size: 18px; margin-bottom: 4px; }
+  .card .sub { font-size: 13px; color: #666; margin-bottom: 18px; }
+
+  label { display: block; font-size: 12px; font-weight: bold; color: #333; margin-bottom: 4px; margin-top: 12px; }
+  input, select {
+    width: 100%; padding: 8px 9px; border: 1px solid #c3c9d1; border-radius: 3px; font-size: 13px;
+  }
+  input:focus, select:focus { outline: 2px solid #14b8a6; border-color: #14b8a6; }
+
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  .btn { padding: 9px 16px; border: none; border-radius: 3px; font-size: 13px; font-weight: bold; cursor: pointer; }
+  .btn-primary { background: #1b3a73; color: #fff; }
+  .btn-secondary { background: #fff; color: #1b3a73; border: 1px solid #1b3a73; }
+  .btn-add { background: #14b8a6; color: #fff; margin-top: 14px; }
+  .btn-remove { background: none; color: #b4324a; border: none; font-size: 11px; cursor: pointer; text-decoration: underline; }
+
+  .nav-row { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; }
+
+  table.item-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 14px; }
+  table.item-table th { background: #f4f6f9; padding: 8px 6px; text-align: left; border-bottom: 2px solid #dbe0e6; }
+  table.item-table td { padding: 8px 6px; border-bottom: 1px solid #eee; }
+
+  .summary-box { background: #f4f6f9; border-radius: 4px; padding: 14px 16px; margin-top: 18px; font-size: 13px; }
+  .summary-box .row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .summary-box .total { font-weight: bold; border-top: 1px solid #dbe0e6; margin-top: 6px; padding-top: 8px; }
+
+  .success-box { text-align: center; padding: 30px 10px; }
+  .success-box .check { width: 60px; height: 60px; border-radius: 50%; background: #e3f7f0; color: #14b8a6; font-size: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .arn { font-size: 20px; font-weight: bold; color: #1b3a73; letter-spacing: 1px; margin: 12px 0; }
+
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.</div>
+<div class="topbar">
+  <div><h1>GSTR-1 — Details of Outward Supplies</h1><p id="period-label" class="sub-period">A free training simulation — gstreturn.org</p></div>
+  <a href="returns.html">&larr; Back to Returns Dashboard</a>
+</div>
+
+<div class="wrap">
+  <div class="stepper" id="stepper"></div>
+  <div class="card" id="card-content"></div>
+</div>
+
+<div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const period = params.get("period") || "practice";
+document.getElementById("period-label").textContent = `Return period: ${period}`;
+
+const regState = JSON.parse(localStorage.getItem("gst_sim_registration") || "{}");
+const ownState = regState.state || "Uttar Pradesh";
+
+const STORAGE_KEY = `gst_sim_gstr1_${period}`;
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+state.step = state.step || 0;
+state.b2b = state.b2b || [];
+state.b2cs = state.b2cs || [{ state: ownState, rate: 18, taxableValue: 0 }];
+state.nil = state.nil || { nilRated: 0, exempt: 0, nonGst: 0 };
+state.hsn = state.hsn || [{ hsn: "", description: "", quantity: 0, value: 0, rate: 18 }];
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+const steps = ["B2B Invoices", "B2C (Small)", "Nil/Exempt/Non-GST", "HSN Summary", "Preview & File"];
+
+function renderStepper() {
+  document.getElementById("stepper").innerHTML = steps.map((label, i) => {
+    const cls = i === state.step ? "active" : i < state.step ? "done" : "";
+    return `<div class="step ${cls}"><span class="num">${i < state.step ? "✓" : i + 1}</span>${label}</div>`;
+  }).join("");
+}
+function goTo(step) { state.step = step; save(); render(); window.scrollTo(0, 0); }
+
+function taxSplit(taxableValue, rate, supplyState) {
+  const totalTax = (taxableValue * rate) / 100;
+  if (supplyState === ownState) {
+    return { igst: 0, cgst: totalTax / 2, sgst: totalTax / 2 };
+  }
+  return { igst: totalTax, cgst: 0, sgst: 0 };
+}
+const inr = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+// ============================================================
+// Step 0: B2B Invoices
+// ============================================================
+function renderStep0() {
+  const rowsHtml = state.b2b.map((inv, i) => {
+    const tax = taxSplit(inv.taxableValue, inv.rate, inv.pos);
+    return `
+      <tr>
+        <td>${inv.gstin}</td><td>${inv.invNo}</td><td>${inv.pos}</td>
+        <td>${inr(inv.taxableValue)}</td><td>${inv.rate}%</td>
+        <td>${inr(tax.igst)}</td><td>${inr(tax.cgst + tax.sgst)}</td>
+        <td><button class="btn-remove" onclick="removeB2B(${i})">Remove</button></td>
+      </tr>`;
+  }).join("");
+
+  return `
+    <h2>B2B Invoices</h2>
+    <p class="sub">Invoices issued to other GST-registered businesses.</p>
+
+    <div class="grid4">
+      <div><label>Recipient GSTIN</label><input id="f-gstin" placeholder="15-char GSTIN" maxlength="15" /></div>
+      <div><label>Invoice Number</label><input id="f-invno" placeholder="e.g. INV-001" /></div>
+      <div><label>Place of Supply (State)</label>
+        <select id="f-pos">
+          ${["Uttar Pradesh","Delhi","Maharashtra","Karnataka","Tamil Nadu","West Bengal","Gujarat","Rajasthan","Bihar"]
+            .map(s => `<option ${s === ownState ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+      </div>
+      <div><label>Tax Rate</label>
+        <select id="f-rate">${[0,5,12,18,28].map(r => `<option value="${r}">${r}%</option>`).join("")}</select>
+      </div>
+    </div>
+    <label>Taxable Value (₹)</label>
+    <input id="f-value" type="number" min="0" placeholder="e.g. 50000" style="max-width:200px;" />
+    <div><button class="btn btn-add" onclick="addB2B()">+ Add Invoice</button></div>
+
+    ${state.b2b.length > 0 ? `
+      <table class="item-table">
+        <thead><tr><th>GSTIN</th><th>Invoice</th><th>POS</th><th>Taxable Value</th><th>Rate</th><th>IGST</th><th>CGST+SGST</th><th></th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>` : `<p class="sub" style="margin-top:14px;">No B2B invoices added yet. If you have none for this period, just continue.</p>`}
+
+    <div class="nav-row">
+      <a href="returns.html" class="btn btn-secondary" style="text-decoration:none;display:inline-block;">Save Draft &amp; Exit</a>
+      <button class="btn btn-primary" onclick="goTo(1)">Continue &rarr;</button>
+    </div>
+  `;
+}
+function addB2B() {
+  const gstin = document.getElementById("f-gstin").value.trim().toUpperCase();
+  const invNo = document.getElementById("f-invno").value.trim();
+  const pos = document.getElementById("f-pos").value;
+  const rate = Number(document.getElementById("f-rate").value);
+  const taxableValue = Number(document.getElementById("f-value").value);
+  if (!gstin || !invNo || !taxableValue) { alert("Fill in GSTIN, invoice number, and taxable value."); return; }
+  state.b2b.push({ gstin, invNo, pos, rate, taxableValue });
+  save();
+  render();
+}
+function removeB2B(i) { state.b2b.splice(i, 1); save(); render(); }
+
+// ============================================================
+// Step 1: B2C (Small) — summary by state + rate
+// ============================================================
+function renderStep1() {
+  const rowsHtml = state.b2cs.map((r, i) => `
+    <tr>
+      <td>${r.state}</td><td>${r.rate}%</td><td>${inr(r.taxableValue)}</td>
+      <td><button class="btn-remove" onclick="removeB2CS(${i})">Remove</button></td>
+    </tr>`).join("");
+  return `
+    <h2>B2C (Small) — Summary</h2>
+    <p class="sub">Consumer sales, summarized by state and tax rate (not invoice-by-invoice).</p>
+    <div class="grid3">
+      <div><label>State</label>
+        <select id="f-b2cs-state">
+          ${["Uttar Pradesh","Delhi","Maharashtra","Karnataka","Tamil Nadu","West Bengal","Gujarat","Rajasthan","Bihar"]
+            .map(s => `<option ${s === ownState ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+      </div>
+      <div><label>Tax Rate</label><select id="f-b2cs-rate">${[0,5,12,18,28].map(r => `<option value="${r}">${r}%</option>`).join("")}</select></div>
+      <div><label>Taxable Value (₹)</label><input id="f-b2cs-value" type="number" min="0" /></div>
+    </div>
+    <div><button class="btn btn-add" onclick="addB2CS()">+ Add Summary Row</button></div>
+    <table class="item-table">
+      <thead><tr><th>State</th><th>Rate</th><th>Taxable Value</th><th></th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(0)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Continue &rarr;</button>
+    </div>
+  `;
+}
+function addB2CS() {
+  const stateVal = document.getElementById("f-b2cs-state").value;
+  const rate = Number(document.getElementById("f-b2cs-rate").value);
+  const taxableValue = Number(document.getElementById("f-b2cs-value").value);
+  if (!taxableValue) { alert("Enter a taxable value."); return; }
+  state.b2cs.push({ state: stateVal, rate, taxableValue });
+  save();
+  render();
+}
+function removeB2CS(i) { state.b2cs.splice(i, 1); save(); render(); }
+
+// ============================================================
+// Step 2: Nil Rated / Exempt / Non-GST
+// ============================================================
+function renderStep2() {
+  return `
+    <h2>Nil Rated, Exempt &amp; Non-GST Supplies</h2>
+    <p class="sub">Total value of supplies that attract no GST, for this period.</p>
+    <label>Nil Rated Supplies (₹)</label>
+    <input id="f-nil" type="number" min="0" value="${state.nil.nilRated || ""}" />
+    <label>Exempt Supplies (₹)</label>
+    <input id="f-exempt" type="number" min="0" value="${state.nil.exempt || ""}" />
+    <label>Non-GST Supplies (₹)</label>
+    <input id="f-nongst" type="number" min="0" value="${state.nil.nonGst || ""}" />
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(1)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep2()">Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep2() {
+  state.nil = {
+    nilRated: Number(document.getElementById("f-nil").value) || 0,
+    exempt: Number(document.getElementById("f-exempt").value) || 0,
+    nonGst: Number(document.getElementById("f-nongst").value) || 0,
+  };
+  save();
+  goTo(3);
+}
+
+// ============================================================
+// Step 3: HSN Summary
+// ============================================================
+function renderStep3() {
+  const rowsHtml = state.hsn.map((h, i) => `
+    <tr>
+      <td><input class="hsn-code" data-i="${i}" value="${h.hsn}" style="width:90px;" /></td>
+      <td><input class="hsn-desc" data-i="${i}" value="${h.description}" /></td>
+      <td><input class="hsn-qty" data-i="${i}" type="number" value="${h.quantity}" style="width:80px;" /></td>
+      <td><input class="hsn-val" data-i="${i}" type="number" value="${h.value}" style="width:100px;" /></td>
+      <td>
+        <select class="hsn-rate" data-i="${i}">${[0,5,12,18,28].map(r => `<option value="${r}" ${r === h.rate ? "selected" : ""}>${r}%</option>`).join("")}</select>
+      </td>
+      <td>${state.hsn.length > 1 ? `<button class="btn-remove" onclick="removeHsn(${i})">Remove</button>` : ""}</td>
+    </tr>`).join("");
+  return `
+    <h2>HSN-wise Summary</h2>
+    <p class="sub">Summary of goods/services supplied, by HSN/SAC code.</p>
+    <table class="item-table">
+      <thead><tr><th>HSN/SAC</th><th>Description</th><th>Qty</th><th>Value (₹)</th><th>Rate</th><th></th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <button class="btn-add" style="border:none;background:none;color:#1b6fd6;text-decoration:underline;cursor:pointer;padding:0;margin-top:12px;" onclick="addHsn()">+ Add HSN row</button>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(2)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep3()">Continue to Preview &rarr;</button>
+    </div>
+  `;
+}
+function addHsn() { state.hsn.push({ hsn: "", description: "", quantity: 0, value: 0, rate: 18 }); save(); render(); }
+function removeHsn(i) { state.hsn.splice(i, 1); save(); render(); }
+function submitStep3() {
+  const codes = document.querySelectorAll(".hsn-code"), descs = document.querySelectorAll(".hsn-desc");
+  const qtys = document.querySelectorAll(".hsn-qty"), vals = document.querySelectorAll(".hsn-val"), rates = document.querySelectorAll(".hsn-rate");
+  state.hsn = Array.from(codes).map((el, i) => ({
+    hsn: el.value.trim(), description: descs[i].value.trim(),
+    quantity: Number(qtys[i].value) || 0, value: Number(vals[i].value) || 0, rate: Number(rates[i].value),
+  }));
+  save();
+  goTo(4);
+}
+
+// ============================================================
+// Step 4: Preview & File
+// ============================================================
+function totals() {
+  let taxableTotal = 0, igstTotal = 0, cgstTotal = 0, sgstTotal = 0;
+  state.b2b.forEach((inv) => {
+    taxableTotal += inv.taxableValue;
+    const t = taxSplit(inv.taxableValue, inv.rate, inv.pos);
+    igstTotal += t.igst; cgstTotal += t.cgst; sgstTotal += t.sgst;
+  });
+  state.b2cs.forEach((r) => {
+    taxableTotal += r.taxableValue;
+    const t = taxSplit(r.taxableValue, r.rate, r.state);
+    igstTotal += t.igst; cgstTotal += t.cgst; sgstTotal += t.sgst;
+  });
+  return { taxableTotal, igstTotal, cgstTotal, sgstTotal, taxTotal: igstTotal + cgstTotal + sgstTotal };
+}
+
+function renderStep4() {
+  if (state.filed) {
+    return `
+      <div class="success-box">
+        <div class="check">✓</div>
+        <h2>GSTR-1 Filed (Simulation)</h2>
+        <p class="sub">Acknowledgement Reference Number:</p>
+        <div class="arn">${state.arn}</div>
+        <p class="sub">This is training data only — nothing was actually filed with the government.</p>
+        <a href="returns.html" class="btn btn-primary" style="text-decoration:none;display:inline-block;">Back to Returns Dashboard</a>
+      </div>
+    `;
+  }
+  const t = totals();
+  return `
+    <h2>Preview &amp; File GSTR-1</h2>
+    <p class="sub">Review your totals for ${period} before filing.</p>
+    <div class="summary-box">
+      <div class="row"><span>Total Taxable Value</span><strong>${inr(t.taxableTotal)}</strong></div>
+      <div class="row"><span>Total IGST</span><strong>${inr(t.igstTotal)}</strong></div>
+      <div class="row"><span>Total CGST</span><strong>${inr(t.cgstTotal)}</strong></div>
+      <div class="row"><span>Total SGST</span><strong>${inr(t.sgstTotal)}</strong></div>
+      <div class="row"><span>Nil Rated / Exempt / Non-GST</span><strong>${inr(state.nil.nilRated + state.nil.exempt + state.nil.nonGst)}</strong></div>
+      <div class="row total"><span>Total Tax Liability</span><strong>${inr(t.taxTotal)}</strong></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(3)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="fileReturn()">File GSTR-1 (Simulation)</button>
+    </div>
+  `;
+}
+function fileReturn() {
+  state.filed = true;
+  const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
+  state.arn = `AB${new Date().getFullYear()}${rand}`;
+  save();
+  localStorage.setItem(`gst_sim_filed_gstr1_${period}`, "1");
+  render();
+}
+
+// ============================================================
+function render() {
+  renderStepper();
+  const renderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4];
+  document.getElementById("card-content").innerHTML = renderers[state.step]();
+}
+render();
+</script>
+
+</body>
+</html>
