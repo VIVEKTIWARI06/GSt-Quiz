@@ -7,12 +7,14 @@ export async function onRequestPost({ request, env }) {
 
   if (!email || !code) return badRequest("email and code are required");
 
-  // Emergency bypass: if EMERGENCY_BYPASS_CODE is set on the Worker and the
-  // student enters it instead of their real OTP, let them straight through.
-  // This is the "everything else is down" last resort — no dependency on
-  // email or Telegram at all. Hand this code out verbally/via WhatsApp only
-  // when genuinely needed, and rotate it after each use.
-  const isBypass = env.EMERGENCY_BYPASS_CODE && code === env.EMERGENCY_BYPASS_CODE;
+  // Emergency bypass: admin-managed via the /admin panel (stored in D1, not
+  // a Cloudflare secret, so it's viewable/regeneratable without the CLI).
+  // If the student enters this instead of their real OTP, let them straight
+  // through — the "everything else is down" last resort.
+  const bypassRow = await env.DB.prepare(
+    "SELECT value FROM app_settings WHERE key = 'bypass_code'"
+  ).first();
+  const isBypass = bypassRow?.value && code === bypassRow.value;
 
   if (!isBypass) {
     const otp = await env.DB.prepare(

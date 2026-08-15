@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GST Portal Simulation — Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+
+  .disclaimer {
+    background: #b4324a; color: #fff; text-align: center;
+    font-size: 13px; padding: 8px 16px;
+  }
+
+  .topbar {
+    background: #0f2a5c; color: #fff; display: flex; align-items: center;
+    justify-content: space-between; padding: 12px 24px;
+  }
+  .topbar .brand { display: flex; align-items: center; gap: 12px; }
+  .topbar .brand .logo {
+    width: 42px; height: 42px; background: #fff; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #0f2a5c; font-size: 11px; text-align: center; line-height: 1.1;
+  }
+  .topbar .brand h1 { font-size: 18px; }
+  .topbar .brand p { font-size: 11px; opacity: 0.8; }
+  .topbar .right { display: flex; align-items: center; gap: 16px; font-size: 13px; }
+  .register-btn {
+    background: #f2b40f; color: #1a1a1a; border: none; padding: 8px 18px;
+    border-radius: 4px; font-weight: bold; cursor: pointer;
+  }
+
+  .navbar { background: #1b3a73; display: flex; }
+  .navbar a {
+    color: #dbe4f5; text-decoration: none; font-size: 13px; padding: 12px 18px;
+    display: block;
+  }
+  .navbar a.active { background: #14b8a6; color: #fff; font-weight: bold; }
+  .navbar a:hover:not(.active) { background: #24478c; }
+
+  .breadcrumb { padding: 12px 24px; font-size: 12px; color: #555; background: #eef1f5; }
+  .breadcrumb a { color: #1b3a73; text-decoration: none; }
+
+  .layout { display: grid; grid-template-columns: 1fr 280px; gap: 20px; padding: 0 24px 40px; max-width: 1200px; margin: 0 auto; }
+
+  .card {
+    background: #fff; border: 1px solid #dbe0e6; border-radius: 4px;
+    padding: 24px; margin-bottom: 16px;
+  }
+  .card h2 { color: #1b3a73; font-size: 18px; margin-bottom: 4px; }
+  .card .pref { font-size: 13px; color: #444; margin-bottom: 18px; }
+  .pref a { color: #1b6fd6; text-decoration: none; }
+
+  h3.section-title { font-size: 14px; margin-bottom: 10px; color: #1a1a1a; }
+
+  table.returns-calendar { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+  table.returns-calendar th, table.returns-calendar td {
+    border: 1px solid #dbe0e6; padding: 10px; text-align: center;
+  }
+  table.returns-calendar th.row-label {
+    background: #1b3a73; color: #fff; text-align: left;
+  }
+  table.returns-calendar td { background: #f4f6f9; }
+  table.returns-calendar .period { font-weight: bold; display: block; }
+  table.returns-calendar .status { color: #b4324a; font-size: 11px; }
+
+  .info-box {
+    border: 1px solid #dbe0e6; padding: 12px 16px; font-size: 12.5px;
+    margin-bottom: 14px; color: #333; border-radius: 3px;
+  }
+  .info-box a { color: #1b6fd6; }
+
+  .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .action-btn {
+    background: #1b3a73; color: #fff; border: none; padding: 12px 20px;
+    border-radius: 3px; font-size: 13px; font-weight: bold; cursor: pointer;
+  }
+  .action-btn:disabled { background: #b7bdc6; cursor: not-allowed; }
+  .action-btn.primary { background: #1b3a73; }
+
+  .else-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 20px; font-size: 13px; }
+
+  .sidebar .profile { font-size: 14px; margin-bottom: 4px; font-weight: bold; }
+  .sidebar .status { color: #888; font-size: 12px; margin-bottom: 14px; }
+  .sidebar a.viewprofile { font-size: 12.5px; color: #1b6fd6; text-decoration: none; display: block; margin-bottom: 18px; }
+  .sidebar h4 { font-size: 13px; border-bottom: 2px solid #14b8a6; padding-bottom: 8px; margin-bottom: 10px; color: #1a1a1a; }
+  .sidebar ul { list-style: none; }
+  .sidebar li { margin-bottom: 10px; }
+  .sidebar a { color: #1b6fd6; text-decoration: none; font-size: 13px; }
+  .sidebar a:hover { text-decoration: underline; }
+
+  .sim-tag {
+    position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff;
+    font-size: 11px; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">
+  This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.
+</div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">GST<br/>SIM</div>
+    <div>
+      <h1>GST Practice Portal</h1>
+      <p>A free training simulation — gstreturn.org</p>
+    </div>
+  </div>
+  <div class="right">
+    <button class="register-btn" onclick="window.location.href='register.html'">Register</button>
+    <span id="student-name-display">Student &#9662;</span>
+  </div>
+</div>
+
+<div class="navbar">
+  <a href="#" class="active">Dashboard</a>
+  <a href="#">Services &#9662;</a>
+  <a href="#">GST Law</a>
+  <a href="#">E-Invoice</a>
+  <a href="#">E-Way Bill System</a>
+  <a href="#">ITR</a>
+  <a href="#">Library</a>
+  <a href="#">TDS</a>
+</div>
+
+<div class="breadcrumb"><a href="/take-test/">Home</a> &nbsp;&rsaquo;&nbsp; Dashboard</div>
+
+<div class="layout">
+  <div>
+    <div class="card">
+      <h2 id="welcome-heading">Welcome to the GST Practice Portal</h2>
+      <p class="pref">Return filing preference (this quarter): Monthly <a href="#">(Change)</a></p>
+
+      <h3 class="section-title">Returns Calendar (last 5 return periods)</h3>
+      <table class="returns-calendar">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Mar-2026</th><th>Apr-2026</th><th>May-2026</th><th>Jun-2026</th><th>Jul-2026</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body">
+          <!-- filled by JS so period labels always show "current -4 months" through "current" -->
+        </tbody>
+      </table>
+
+      <div class="info-box">You can navigate to any section using the menu above.</div>
+      <div class="info-box">
+        <strong>Practice tip:</strong> Try the full flow — register a fictional business first, then come back here and file a sample GSTR-1 and GSTR-3B for practice. Nothing here is submitted anywhere real.
+      </div>
+
+      <div class="action-row">
+        <button class="action-btn" onclick="alert('Return filing simulation — coming next. This will walk through a practice GSTR-3B step by step.')">Return Dashboard &rarr;</button>
+        <button class="action-btn" onclick="alert('Challan creation simulation — coming next.')">Create Challan &rarr;</button>
+        <button class="action-btn" onclick="alert('Notices simulation — coming next.')">View Notice(s) &amp; Order(s) &rarr;</button>
+        <button class="action-btn" disabled>Annual Return &rarr;</button>
+      </div>
+
+      <div class="else-row">
+        <span>Else go to &raquo;</span>
+        <button class="action-btn primary" onclick="alert('This will lead into the full simulated dashboard flow.')">Continue to Dashboard &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="card">
+      <div class="profile" id="sidebar-name">Student</div>
+      <div class="status">Practice Account</div>
+      <a href="#" class="viewprofile">View Profile &#9432;</a>
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#">Check Cash Balance</a></li>
+        <li><a href="#">Liability Ledger</a></li>
+        <li><a href="#">Credit Ledger</a></li>
+        <li><a href="#">Electronic Credit Reversal &amp; Re-claimed Statement</a></li>
+        <li><a href="#">Negative Liability Statement — Regular Taxpayers</a></li>
+        <li><a href="#">RCM Liability/ITC Statement</a></li>
+        <li><a href="#">Application for Unbarring Returns</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
+
+<script>
+  // Populate the returns calendar with the last 5 months relative to today,
+  // and mark all as "NA - Not Registered" since this is a fresh practice account.
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const now = new Date();
+  let cells = [];
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    cells.push(`${months[d.getMonth()]}-${d.getFullYear()}`);
+  }
+  const rows = ["GSTR-1 / IFF", "GSTR-3B"];
+  const tbody = document.getElementById("calendar-body");
+  rows.forEach((label) => {
+    const tr = document.createElement("tr");
+    let html = `<th class="row-label">${label}</th>`;
+    cells.forEach((c) => {
+      html += `<td><span class="period">${c}</span><span class="status">NA - Not Registered</span></td>`;
+    });
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+  });
+
+  // If a student name was passed in via ?name=..., personalize the greeting.
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get("name");
+  if (name) {
+    document.getElementById("welcome-heading").textContent = `Welcome ${name} to the GST Practice Portal`;
+    document.getElementById("student-name-display").textContent = name + " ▾";
+    document.getElementById("sidebar-name").textContent = name;
+  }
+</script>
+
+</body>
+</html>

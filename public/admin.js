@@ -20,9 +20,28 @@ $("#btn-login").addEventListener("click", async () => {
   try {
     await loadCourses(); // also validates the password
     await loadOrganizations();
+    await loadBypassCode();
     show("screen-admin");
   } catch (err) {
     $("#login-error").textContent = err.message;
+  }
+});
+
+async function loadBypassCode() {
+  const data = await adminApi("/admin/bypass-code");
+  $("#bypass-code-display").textContent = data.code || "No code set yet — click 'Generate new code' below.";
+}
+
+$("#btn-regenerate-bypass").addEventListener("click", async () => {
+  const status = $("#bypass-status");
+  if (!window.confirm("Generate a new bypass code? The old one will stop working immediately.")) return;
+  status.textContent = "Generating…";
+  try {
+    const data = await adminApi("/admin/bypass-code", { method: "POST" });
+    $("#bypass-code-display").textContent = data.code;
+    status.textContent = "New code generated and active immediately.";
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
   }
 });
 
@@ -190,9 +209,14 @@ $("#btn-backup").addEventListener("click", async () => {
   status.textContent = "Running backup…";
   try {
     const data = await adminApi("/admin/backup-now", { method: "POST" });
+    const parts = [];
+    parts.push(data.emailed ? "Email: sent" : "Email: failed");
+    if (data.interserver !== null) {
+      parts.push(data.interserver ? "InterServer: saved" : "InterServer: failed");
+    }
     status.textContent = data.ok
-      ? `Backup emailed successfully (${data.counts}).`
-      : `Backup failed: ${data.reason || "unknown error"}`;
+      ? `Backup complete (${data.counts}). ${parts.join(" · ")}`
+      : `Backup failed entirely. ${parts.join(" · ")}`;
   } catch (err) {
     status.textContent = "Error: " + err.message;
   }

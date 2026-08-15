@@ -19,6 +19,7 @@ import { onRequestPost as adminBackupPost } from "../functions/api/admin/backup-
 import { onRequestPost as quizResumePost } from "../functions/api/quiz/resume.js";
 import { onRequestGet as organizationsGet } from "../functions/api/organizations.js";
 import { onRequestGet as adminOrgsGet, onRequestPost as adminOrgsPost } from "../functions/api/admin/organizations.js";
+import { onRequestGet as bypassCodeGet, onRequestPost as bypassCodePost } from "../functions/api/admin/bypass-code.js";
 import { runBackup } from "../functions/_backup.js";
 
 const routes = {
@@ -37,6 +38,8 @@ const routes = {
   "POST /api/admin/backup-now": adminBackupPost,
   "GET /api/admin/organizations": adminOrgsGet,
   "POST /api/admin/organizations": adminOrgsPost,
+  "GET /api/admin/bypass-code": bypassCodeGet,
+  "POST /api/admin/bypass-code": bypassCodePost,
 };
 
 export default {

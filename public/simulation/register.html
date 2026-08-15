@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GST Registration Simulation — Practice Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .topbar p { font-size: 11px; opacity: 0.8; }
+
+  .wrap { max-width: 880px; margin: 24px auto; padding: 0 20px 60px; }
+
+  .stepper { display: flex; background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; overflow: hidden; margin-bottom: 20px; }
+  .step { flex: 1; text-align: center; padding: 12px 6px; font-size: 11.5px; color: #888; border-right: 1px solid #dbe0e6; position: relative; }
+  .step:last-child { border-right: none; }
+  .step .num { display: block; width: 24px; height: 24px; line-height: 24px; border-radius: 50%; background: #dbe0e6; color: #fff; margin: 0 auto 6px; font-weight: bold; }
+  .step.active { color: #1b3a73; font-weight: bold; }
+  .step.active .num { background: #14b8a6; }
+  .step.done .num { background: #1b3a73; }
+  .step.done { color: #1b3a73; }
+
+  .card { background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; padding: 28px; }
+  .card h2 { color: #1b3a73; font-size: 18px; margin-bottom: 4px; }
+  .card .sub { font-size: 13px; color: #666; margin-bottom: 22px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  label { display: block; font-size: 12.5px; font-weight: bold; color: #333; margin-bottom: 5px; margin-top: 14px; }
+  label .req { color: #b4324a; }
+  input, select {
+    width: 100%; padding: 9px 10px; border: 1px solid #c3c9d1; border-radius: 3px; font-size: 13px;
+  }
+  input:focus, select:focus { outline: 2px solid #14b8a6; border-color: #14b8a6; }
+  .hint { font-size: 11px; color: #888; margin-top: 3px; }
+  .error-text { font-size: 11.5px; color: #b4324a; margin-top: 3px; display: none; }
+
+  .otp-row { display: flex; gap: 10px; align-items: flex-end; }
+  .otp-row > div { flex: 1; }
+  .btn { padding: 10px 18px; border: none; border-radius: 3px; font-size: 13px; font-weight: bold; cursor: pointer; }
+  .btn-primary { background: #1b3a73; color: #fff; }
+  .btn-primary:disabled { background: #b7bdc6; cursor: not-allowed; }
+  .btn-secondary { background: #fff; color: #1b3a73; border: 1px solid #1b3a73; }
+  .btn-teal { background: #14b8a6; color: #fff; }
+
+  .nav-row { display: flex; justify-content: space-between; margin-top: 28px; padding-top: 18px; border-top: 1px solid #eee; }
+
+  .otp-note { background: #fff8e1; border: 1px solid #f2d98a; padding: 10px 12px; font-size: 12px; border-radius: 3px; margin-top: 10px; }
+  .otp-note b { color: #8a6d00; }
+
+  .add-row-btn { font-size: 12.5px; color: #1b6fd6; background: none; border: none; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+  .item-block { border: 1px dashed #c3c9d1; border-radius: 4px; padding: 14px; margin-top: 14px; position: relative; }
+  .item-block .remove { position: absolute; top: 8px; right: 10px; font-size: 11px; color: #b4324a; background: none; border: none; cursor: pointer; }
+
+  .success-box { text-align: center; padding: 30px 10px; }
+  .success-box .check { width: 60px; height: 60px; border-radius: 50%; background: #e3f7f0; color: #14b8a6; font-size: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .arn { font-size: 22px; font-weight: bold; color: #1b3a73; letter-spacing: 1px; margin: 12px 0; }
+
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.</div>
+<div class="topbar">
+  <div><h1>GST Practice Portal — New Registration</h1><p>A free training simulation — gstreturn.org</p></div>
+  <a href="/simulation/dashboard.html" style="color:#fff;font-size:12px;text-decoration:none;">&larr; Back to dashboard</a>
+</div>
+
+<div class="wrap">
+  <div class="stepper" id="stepper"></div>
+  <div class="card" id="card-content"></div>
+</div>
+
+<div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
+
+<script>
+// ============================================================
+// State — persisted to localStorage so progress survives a refresh,
+// same "feel" as the real portal saving a draft application.
+// ============================================================
+const STORAGE_KEY = "gst_sim_registration";
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+state.step = state.step || 0;
+state.promoters = state.promoters || [{ name: "", pan: "", designation: "" }];
+state.goods = state.goods || [{ hsn: "", description: "" }];
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+const steps = [
+  "Business Details",
+  "Verify PAN & Mobile",
+  "Promoter Details",
+  "Place of Business",
+  "Goods & Services",
+  "Bank Details",
+  "Verify & Submit",
+];
+
+function renderStepper() {
+  const el = document.getElementById("stepper");
+  el.innerHTML = steps.map((label, i) => {
+    const cls = i === state.step ? "active" : i < state.step ? "done" : "";
+    return `<div class="step ${cls}"><span class="num">${i < state.step ? "✓" : i + 1}</span>${label}</div>`;
+  }).join("");
+}
+
+function goTo(step) { state.step = step; save(); render(); window.scrollTo(0, 0); }
+
+function fieldError(id, msg) {
+  const el = document.getElementById(id + "-error");
+  if (el) { el.textContent = msg; el.style.display = msg ? "block" : "none"; }
+}
+
+// ============================================================
+// Step 0: Business Details
+// ============================================================
+function renderStep0() {
+  return `
+    <h2>Business Details</h2>
+    <p class="sub">Enter your (practice) business information exactly as you would on the real portal.</p>
+
+    <label>Legal Name of Business <span class="req">*</span></label>
+    <input id="f-legalName" value="${state.legalName || ""}" placeholder="e.g. Sharma Traders" />
+    <div class="error-text" id="f-legalName-error"></div>
+
+    <label>Trade Name (if different)</label>
+    <input id="f-tradeName" value="${state.tradeName || ""}" placeholder="e.g. Sharma General Store" />
+
+    <div class="grid2">
+      <div>
+        <label>State <span class="req">*</span></label>
+        <select id="f-state">
+          <option value="">Select state</option>
+          ${["Uttar Pradesh","Delhi","Maharashtra","Karnataka","Tamil Nadu","West Bengal","Gujarat","Rajasthan","Bihar","Other"]
+            .map(s => `<option ${state.state === s ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+        <div class="error-text" id="f-state-error"></div>
+      </div>
+      <div>
+        <label>District <span class="req">*</span></label>
+        <input id="f-district" value="${state.district || ""}" placeholder="e.g. Kanpur" />
+        <div class="error-text" id="f-district-error"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Constitution of Business <span class="req">*</span></label>
+        <select id="f-constitution">
+          <option value="">Select</option>
+          ${["Proprietorship","Partnership","Private Limited Company","Public Limited Company","LLP","HUF","Other"]
+            .map(s => `<option ${state.constitution === s ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+      </div>
+      <div>
+        <label>Reason for Registration</label>
+        <select id="f-reason">
+          ${["Crossing turnover threshold","Voluntary registration","Inter-state supply","Casual taxable person","Other"]
+            .map(s => `<option ${state.reason === s ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <span></span>
+      <button class="btn btn-primary" onclick="submitStep0()">Save &amp; Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep0() {
+  const legalName = document.getElementById("f-legalName").value.trim();
+  const stateVal = document.getElementById("f-state").value;
+  const district = document.getElementById("f-district").value.trim();
+  const constitution = document.getElementById("f-constitution").value;
+  let ok = true;
+  fieldError("f-legalName", legalName ? "" : (ok = false, "Legal name is required"));
+  fieldError("f-state", stateVal ? "" : (ok = false, "State is required"));
+  fieldError("f-district", district ? "" : (ok = false, "District is required"));
+  if (!ok) return;
+  Object.assign(state, {
+    legalName, tradeName: document.getElementById("f-tradeName").value.trim(),
+    state: stateVal, district, constitution,
+    reason: document.getElementById("f-reason").value,
+  });
+  save();
+  goTo(1);
+}
+
+// ============================================================
+// Step 1: Verify PAN & Mobile (simulated OTP)
+// ============================================================
+function renderStep1() {
+  return `
+    <h2>Verify PAN &amp; Mobile Number</h2>
+    <p class="sub">In the real portal, this step validates your PAN with the Income Tax database and sends OTPs to your mobile/email. Here, everything is simulated — no real messages are sent.</p>
+
+    <label>PAN Number <span class="req">*</span></label>
+    <input id="f-pan" value="${state.pan || ""}" placeholder="e.g. ABCDE1234F" maxlength="10" style="text-transform:uppercase;" />
+    <div class="hint">Format: 5 letters, 4 digits, 1 letter</div>
+    <div class="error-text" id="f-pan-error"></div>
+
+    <div class="grid2">
+      <div>
+        <label>Mobile Number <span class="req">*</span></label>
+        <input id="f-mobile" value="${state.mobile || ""}" placeholder="10-digit mobile" maxlength="10" />
+      </div>
+      <div>
+        <label>Email Address <span class="req">*</span></label>
+        <input id="f-email" value="${state.email || ""}" placeholder="you@example.com" />
+      </div>
+    </div>
+
+    <div id="otp-section"></div>
+
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(0)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep1()">Verify &amp; Continue &rarr;</button>
+    </div>
+  `;
+}
+let simulatedOtp = null;
+function sendSimOtp() {
+  const pan = document.getElementById("f-pan").value.trim().toUpperCase();
+  const mobile = document.getElementById("f-mobile").value.trim();
+  const email = document.getElementById("f-email").value.trim();
+  let ok = true;
+  fieldError("f-pan", /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan) ? "" : (ok = false, "Enter a valid 10-character PAN"));
+  if (!ok || mobile.length !== 10 || !email) {
+    if (mobile.length !== 10) alert("Enter a valid 10-digit mobile number first.");
+    else if (!email) alert("Enter an email address first.");
+    return;
+  }
+  simulatedOtp = String(Math.floor(100000 + Math.random() * 900000));
+  document.getElementById("otp-section").innerHTML = `
+    <div class="otp-note"><b>Simulated OTP:</b> in the real portal this would be texted/emailed to you. For practice, your code is <b>${simulatedOtp}</b>.</div>
+    <label>Enter OTP <span class="req">*</span></label>
+    <div class="otp-row">
+      <div><input id="f-otp" maxlength="6" placeholder="6-digit code" /></div>
+      <button class="btn btn-secondary" onclick="sendSimOtp()">Resend</button>
+    </div>
+    <div class="error-text" id="f-otp-error"></div>
+  `;
+}
+function submitStep1() {
+  if (!simulatedOtp) { sendSimOtp(); return; }
+  const entered = document.getElementById("f-otp")?.value.trim();
+  if (entered !== simulatedOtp) { fieldError("f-otp", "Incorrect code — check the simulated OTP shown above."); return; }
+  Object.assign(state, {
+    pan: document.getElementById("f-pan").value.trim().toUpperCase(),
+    mobile: document.getElementById("f-mobile").value.trim(),
+    email: document.getElementById("f-email").value.trim(),
+    verified: true,
+  });
+  save();
+  goTo(2);
+}
+
+// ============================================================
+// Step 2: Promoter/Partner Details (repeatable)
+// ============================================================
+function renderStep2() {
+  const blocks = state.promoters.map((p, i) => `
+    <div class="item-block">
+      ${state.promoters.length > 1 ? `<button class="remove" onclick="removePromoter(${i})">Remove</button>` : ""}
+      <div class="grid2">
+        <div><label>Full Name <span class="req">*</span></label><input class="promoter-name" data-i="${i}" value="${p.name}" /></div>
+        <div><label>PAN</label><input class="promoter-pan" data-i="${i}" value="${p.pan}" maxlength="10" /></div>
+      </div>
+      <label>Designation / Status</label>
+      <select class="promoter-desig" data-i="${i}">
+        ${["Proprietor","Partner","Director","Managing Director","Karta","Other"]
+          .map(d => `<option ${p.designation === d ? "selected" : ""}>${d}</option>`).join("")}
+      </select>
+    </div>
+  `).join("");
+
+  return `
+    <h2>Promoter / Partner Details</h2>
+    <p class="sub">Add everyone with ownership/managerial control of the business.</p>
+    ${blocks}
+    <button class="add-row-btn" onclick="addPromoter()">+ Add another promoter/partner</button>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(1)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep2()">Save &amp; Continue &rarr;</button>
+    </div>
+  `;
+}
+function addPromoter() { state.promoters.push({ name: "", pan: "", designation: "" }); save(); render(); }
+function removePromoter(i) { state.promoters.splice(i, 1); save(); render(); }
+function submitStep2() {
+  const names = document.querySelectorAll(".promoter-name");
+  const pans = document.querySelectorAll(".promoter-pan");
+  const desigs = document.querySelectorAll(".promoter-desig");
+  let ok = true;
+  state.promoters = Array.from(names).map((el, i) => {
+    if (!el.value.trim()) ok = false;
+    return { name: el.value.trim(), pan: pans[i].value.trim().toUpperCase(), designation: desigs[i].value };
+  });
+  if (!ok) { alert("Every promoter needs at least a name."); return; }
+  save();
+  goTo(3);
+}
+
+// ============================================================
+// Step 3: Principal Place of Business
+// ============================================================
+function renderStep3() {
+  return `
+    <h2>Principal Place of Business</h2>
+    <p class="sub">The main address where the business operates.</p>
+    <label>Building / Street <span class="req">*</span></label>
+    <input id="f-address1" value="${state.address1 || ""}" placeholder="e.g. 12 MG Road" />
+    <div class="grid2">
+      <div><label>City <span class="req">*</span></label><input id="f-city" value="${state.city || ""}" /></div>
+      <div><label>PIN Code <span class="req">*</span></label><input id="f-pin" value="${state.pin || ""}" maxlength="6" /></div>
+    </div>
+    <label>Nature of Possession of Premises</label>
+    <select id="f-possession">
+      ${["Owned","Rented","Leased","Consent","Shared"].map(p => `<option ${state.possession === p ? "selected" : ""}>${p}</option>`).join("")}
+    </select>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(2)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep3()">Save &amp; Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep3() {
+  const address1 = document.getElementById("f-address1").value.trim();
+  const city = document.getElementById("f-city").value.trim();
+  const pin = document.getElementById("f-pin").value.trim();
+  if (!address1 || !city || !/^[0-9]{6}$/.test(pin)) {
+    alert("Please fill address, city, and a valid 6-digit PIN code.");
+    return;
+  }
+  Object.assign(state, { address1, city, pin, possession: document.getElementById("f-possession").value });
+  save();
+  goTo(4);
+}
+
+// ============================================================
+// Step 4: Goods & Services (HSN/SAC, repeatable)
+// ============================================================
+function renderStep4() {
+  const blocks = state.goods.map((g, i) => `
+    <div class="item-block">
+      ${state.goods.length > 1 ? `<button class="remove" onclick="removeGood(${i})">Remove</button>` : ""}
+      <div class="grid2">
+        <div><label>HSN / SAC Code</label><input class="good-hsn" data-i="${i}" value="${g.hsn}" placeholder="e.g. 6109" /></div>
+        <div><label>Description</label><input class="good-desc" data-i="${i}" value="${g.description}" placeholder="e.g. T-shirts, cotton" /></div>
+      </div>
+    </div>
+  `).join("");
+  return `
+    <h2>Goods &amp; Services Supplied</h2>
+    <p class="sub">List the top goods/services this business deals in (up to 5 in the real portal).</p>
+    ${blocks}
+    <button class="add-row-btn" onclick="addGood()">+ Add another item</button>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(3)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep4()">Save &amp; Continue &rarr;</button>
+    </div>
+  `;
+}
+function addGood() { state.goods.push({ hsn: "", description: "" }); save(); render(); }
+function removeGood(i) { state.goods.splice(i, 1); save(); render(); }
+function submitStep4() {
+  const hsns = document.querySelectorAll(".good-hsn");
+  const descs = document.querySelectorAll(".good-desc");
+  state.goods = Array.from(hsns).map((el, i) => ({ hsn: el.value.trim(), description: descs[i].value.trim() }));
+  save();
+  goTo(5);
+}
+
+// ============================================================
+// Step 5: Bank Details
+// ============================================================
+function renderStep5() {
+  return `
+    <h2>Bank Account Details</h2>
+    <p class="sub">Optional at this stage on the real portal too — can be added later.</p>
+    <div class="grid2">
+      <div><label>Account Number</label><input id="f-acc" value="${state.bankAcc || ""}" /></div>
+      <div><label>IFSC Code</label><input id="f-ifsc" value="${state.ifsc || ""}" placeholder="e.g. SBIN0001234" /></div>
+    </div>
+    <label>Bank Name</label>
+    <input id="f-bankname" value="${state.bankName || ""}" />
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(4)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="submitStep5()">Save &amp; Continue &rarr;</button>
+    </div>
+  `;
+}
+function submitStep5() {
+  Object.assign(state, {
+    bankAcc: document.getElementById("f-acc").value.trim(),
+    ifsc: document.getElementById("f-ifsc").value.trim().toUpperCase(),
+    bankName: document.getElementById("f-bankname").value.trim(),
+  });
+  save();
+  goTo(6);
+}
+
+// ============================================================
+// Step 6: Verify & Submit
+// ============================================================
+function renderStep6() {
+  if (state.submitted) {
+    return `
+      <div class="success-box">
+        <div class="check">✓</div>
+        <h2>Application Submitted (Simulation)</h2>
+        <p class="sub">Your practice Application Reference Number (ARN):</p>
+        <div class="arn">${state.arn}</div>
+        <p class="sub">In the real portal, GST officers review this within a few working days and either approve it (issuing a GSTIN) or raise a query. This is a fixed part of the training — no real application was filed anywhere.</p>
+        <button class="btn btn-teal" onclick="startOver()">Start a New Practice Application</button>
+        &nbsp;
+        <a href="/simulation/dashboard.html" class="btn btn-secondary" style="text-decoration:none;display:inline-block;">Back to Dashboard</a>
+      </div>
+    `;
+  }
+  return `
+    <h2>Verify &amp; Submit</h2>
+    <p class="sub">Review your practice application before submitting.</p>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+      <tr><td style="padding:6px 0;color:#666;">Legal Name</td><td style="font-weight:bold;">${state.legalName || "—"}</td></tr>
+      <tr><td style="padding:6px 0;color:#666;">PAN</td><td style="font-weight:bold;">${state.pan || "—"}</td></tr>
+      <tr><td style="padding:6px 0;color:#666;">State / District</td><td style="font-weight:bold;">${state.state || "—"} / ${state.district || "—"}</td></tr>
+      <tr><td style="padding:6px 0;color:#666;">Promoters</td><td style="font-weight:bold;">${state.promoters.map(p => p.name).filter(Boolean).join(", ") || "—"}</td></tr>
+      <tr><td style="padding:6px 0;color:#666;">Address</td><td style="font-weight:bold;">${state.address1 || "—"}, ${state.city || "—"} ${state.pin || ""}</td></tr>
+    </table>
+    <div class="nav-row">
+      <button class="btn btn-secondary" onclick="goTo(5)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="finalSubmit()">Submit Application (Simulation)</button>
+    </div>
+  `;
+}
+function finalSubmit() {
+  state.submitted = true;
+  const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
+  state.arn = `AA${new Date().getFullYear()}${rand}`;
+  save();
+  render();
+}
+function startOver() {
+  localStorage.removeItem(STORAGE_KEY);
+  state = { step: 0, promoters: [{ name: "", pan: "", designation: "" }], goods: [{ hsn: "", description: "" }] };
+  render();
+}
+
+// ============================================================
+function render() {
+  renderStepper();
+  const renderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4, renderStep5, renderStep6];
+  document.getElementById("card-content").innerHTML = renderers[state.step]();
+}
+render();
+</script>
+
+</body>
+</html>
