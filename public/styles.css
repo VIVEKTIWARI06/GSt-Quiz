@@ -212,3 +212,28 @@ input:focus { outline: 2px solid var(--gold-light); border-color: var(--gold); }
 .modal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .delivery-options { margin-bottom: 4px; }
+
+/* Site-wide navigation, used on landing/take-test pages */
+.main-nav {
+  background: var(--navy); padding: 0 20px; display: flex; gap: 4px;
+  border-radius: var(--radius) var(--radius) 0 0; margin-bottom: -1px;
+}
+.main-nav a {
+  color: rgba(255,255,255,0.75); text-decoration: none; font-size: 13px; font-weight: 600;
+  padding: 14px 16px; display: block; border-bottom: 3px solid transparent;
+}
+.main-nav a:hover { color: #fff; }
+.main-nav a.active { color: #fff; border-bottom-color: var(--gold); }
+@media (max-width: 560px) {
+  .main-nav { overflow-x: auto; white-space: nowrap; }
+  .main-nav a { padding: 12px 12px; font-size: 12px; }
+}
+
+/* Table polish for course lists / data tables on the main brand pages */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 10px 12px; background: #f4f1e8; color: var(--navy);
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 2px solid var(--gold-light);
+}
+.data-table td { padding: 12px; border-bottom: 1px solid #eee7d8; font-size: 14px; }
+.data-table tr:hover td { background: #fbfaf5; }

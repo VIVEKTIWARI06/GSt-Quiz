@@ -3,16 +3,32 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GST Certification — gstreturn.org</title>
-<meta name="description" content="Free GST certification assessments. Test your knowledge of GST fundamentals, returns filing, and advanced practice — get an instant score and certificate." />
+<title>GST Certification &amp; Practice Portal — gstreturn.org</title>
+<meta name="description" content="Get certified in GST and practice real registration/filing on our free simulator — everything you need to actually learn GST, not just read about it." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css" />
 <style>
-  .hero { text-align: center; padding: 60px 20px 40px; }
-  .hero h1 { font-size: 38px; max-width: 640px; margin: 0 auto 16px; }
-  .hero p.lead { font-size: 17px; color: var(--muted); max-width: 520px; margin: 0 auto 32px; }
-  .hero .btn-primary { padding: 16px 32px; font-size: 15px; }
+  .hero { text-align: center; padding: 56px 20px 36px; }
+  .hero .eyebrow { color: var(--gold); font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+  .hero h1 { font-size: 40px; max-width: 700px; margin: 0 auto 16px; line-height: 1.15; }
+  .hero p.lead { font-size: 17px; color: var(--muted); max-width: 560px; margin: 0 auto 30px; }
+  .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cta-row .btn-primary { padding: 16px 30px; font-size: 15px; }
+  .cta-row .btn-secondary { padding: 16px 30px; font-size: 15px; }
+  .trust-strip { text-align: center; color: var(--muted); font-size: 13px; margin-top: 20px; }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 50px 0; }
+  .split-card {
+    border: 1px solid #e6e1d6; border-radius: var(--radius); padding: 28px;
+    background: #fff; position: relative; overflow: hidden;
+  }
+  .split-card .tag { display: inline-block; background: var(--gold-light); color: var(--navy); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .split-card h2 { font-family: var(--serif); color: var(--navy); font-size: 22px; margin-bottom: 10px; }
+  .split-card p { color: var(--muted); font-size: 14px; margin-bottom: 18px; line-height: 1.55; }
+  .split-card ul { list-style: none; margin-bottom: 20px; }
+  .split-card li { font-size: 13.5px; color: var(--ink); margin-bottom: 8px; padding-left: 22px; position: relative; }
+  .split-card li:before { content: "✓"; color: var(--ok); position: absolute; left: 0; font-weight: bold; }
 
   .benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 50px 0; }
   .benefit { text-align: center; padding: 0 12px; }
@@ -20,13 +36,18 @@
   .benefit h3 { font-size: 16px; color: var(--navy); margin: 0 0 6px; }
   .benefit p { font-size: 14px; color: var(--muted); margin: 0; }
 
-  .courses-section { margin-top: 60px; }
+  .courses-section { margin-top: 20px; }
   .courses-section h2 { font-family: var(--serif); color: var(--navy); font-size: 24px; text-align: center; margin-bottom: 8px; }
-  .courses-section > p { text-align: center; color: var(--muted); margin-bottom: 28px; }
+  .courses-section > p { text-align: center; color: var(--muted); margin-bottom: 24px; }
 
-  .landing-footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 50px; }
+  .final-cta { text-align: center; padding: 50px 20px; background: var(--navy); border-radius: var(--radius); margin: 50px 0; }
+  .final-cta h2 { color: #fff; font-family: var(--serif); font-size: 26px; margin-bottom: 10px; }
+  .final-cta p { color: rgba(255,255,255,0.7); margin-bottom: 24px; }
 
-  @media (max-width: 640px) {
+  .landing-footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 40px; }
+
+  @media (max-width: 720px) {
+    .split { grid-template-columns: 1fr; }
     .benefits { grid-template-columns: 1fr; gap: 28px; }
     .hero h1 { font-size: 28px; }
   }
@@ -34,36 +55,72 @@
 </head>
 <body>
 
-<div class="wrap" style="max-width: 860px;">
+<div class="wrap" style="max-width: 900px;">
   <header class="site-header">
     <div class="brand">
       <span class="brand-mark">GST</span>
       <span class="brand-name">gstreturn.org</span>
     </div>
-    <span class="header-tag">Free GST Certification</span>
+    <span class="header-tag">Learn GST — For Real</span>
   </header>
 
-  <section class="hero">
-    <h1>Prove your GST knowledge — get certified, free.</h1>
-    <p class="lead">Take a short, structured assessment covering GST fundamentals, returns filing, or advanced practice. Get your score instantly and a downloadable certificate the moment you pass.</p>
-    <a href="/take-test/" class="btn-primary">Take an assessment &rarr;</a>
+  <nav class="main-nav">
+    <a href="/" class="active">Home</a>
+    <a href="/take-test/">Assessments</a>
+    <a href="/simulation/dashboard.html">GST Simulator</a>
+  </nav>
+
+  <section class="hero" style="background:#fff;border:1px solid #e6e1d6;border-top:none;border-radius:0 0 var(--radius) var(--radius);padding-top:44px;">
+    <div class="eyebrow">100% Free — No Catches</div>
+    <h1>Stop just reading about GST. Actually do it.</h1>
+    <p class="lead">Get certified with real assessments, then practice registration and return filing on a portal built to feel exactly like the real thing — before you ever touch a live GSTIN.</p>
+    <div class="cta-row">
+      <a href="/take-test/" class="btn-primary">Take a Free Assessment &rarr;</a>
+      <a href="/simulation/dashboard.html" class="btn-secondary">Try the GST Simulator &rarr;</a>
+    </div>
+    <p class="trust-strip">No credit card. No sign-up fees. Built for students who don't have a lab to practice in.</p>
+  </section>
+
+  <section class="split">
+    <div class="split-card">
+      <span class="tag">Certification</span>
+      <h2>Free GST Assessments</h2>
+      <p>Structured, timed tests covering GST fundamentals, returns filing, and advanced practice — with a real certificate the moment you pass.</p>
+      <ul>
+        <li>Instant scoring, no waiting</li>
+        <li>Certificate emailed &amp; sent on Telegram</li>
+        <li>Pick the level that matches you</li>
+      </ul>
+      <a href="/take-test/" class="btn-primary" style="display:block;text-align:center;">Take an Assessment</a>
+    </div>
+    <div class="split-card">
+      <span class="tag">Hands-On Practice</span>
+      <h2>The GST Simulator</h2>
+      <p>A working practice replica of the real GST portal — register a fictional business, then file GSTR-1 and GSTR-3B step by step, with real tax math.</p>
+      <ul>
+        <li>Full registration walkthrough with a real GSTIN format</li>
+        <li>File GSTR-1 &amp; GSTR-3B with genuine ITC calculations</li>
+        <li>Ledgers &amp; statements, just like the real dashboard</li>
+      </ul>
+      <a href="/simulation/dashboard.html" class="btn-primary" style="display:block;text-align:center;">Open the Simulator</a>
+    </div>
   </section>
 
   <section class="benefits">
     <div class="benefit">
       <div class="num">01</div>
-      <h3>Instant results</h3>
-      <p>No waiting — your score and pass/fail status appear the second you submit.</p>
+      <h3>No lab required</h3>
+      <p>Built for colleges and training programs without computer labs — works on any phone or shared device.</p>
     </div>
     <div class="benefit">
       <div class="num">02</div>
-      <h3>Real certificate</h3>
-      <p>Pass and get a certificate emailed to you (and on Telegram), ready to share or add to your resume.</p>
+      <h3>Learn by doing</h3>
+      <p>Reading about GSTR-3B and actually filling one out with real tax calculations are completely different things.</p>
     </div>
     <div class="benefit">
       <div class="num">03</div>
       <h3>Completely free</h3>
-      <p>No fees, no catches — built to help you genuinely test and build your GST knowledge.</p>
+      <p>No fees, no premium tier, no catch — built to genuinely help you learn and prove your GST knowledge.</p>
     </div>
   </section>
 
@@ -75,8 +132,17 @@
     </div>
   </section>
 
+  <section class="final-cta">
+    <h2>Ready to actually learn GST?</h2>
+    <p>Start with an assessment, or jump straight into the simulator — either way, it takes less than a minute to begin.</p>
+    <div class="cta-row">
+      <a href="/take-test/" class="btn-primary" style="background:#fff;color:var(--navy);">Take an Assessment</a>
+      <a href="/simulation/dashboard.html" class="btn-secondary" style="border-color:#fff;color:#fff;">Try the Simulator</a>
+    </div>
+  </section>
+
   <footer class="landing-footer">
-    <p>gstreturn.org &middot; GST Certification Program</p>
+    <p>gstreturn.org &middot; GST Certification &amp; Practice Program</p>
   </footer>
 </div>
 
