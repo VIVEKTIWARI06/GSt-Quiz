@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Statements — GST Practice Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .topbar a { color: #fff; font-size: 12px; text-decoration: none; }
+
+  .wrap { max-width: 900px; margin: 24px auto; padding: 0 20px 60px; }
+  .card { background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; padding: 22px; margin-bottom: 16px; }
+  .card h2 { color: #1b3a73; font-size: 15px; margin-bottom: 6px; }
+  .card .desc { font-size: 12.5px; color: #666; margin-bottom: 14px; }
+  .empty { background: #f4f6f9; border-radius: 3px; padding: 14px; text-align: center; color: #888; font-size: 12.5px; }
+
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.</div>
+<div class="topbar">
+  <div><h1>Statements &amp; Applications</h1></div>
+  <a href="dashboard.html">&larr; Back to dashboard</a>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <h2>Electronic Credit Reversal &amp; Re-claimed Statement</h2>
+    <p class="desc">Tracks ITC that was reversed and later re-claimed, mainly relevant when a supplier hasn't paid their own tax on time. Most businesses have no entries here in most periods.</p>
+    <div class="empty">No records found for this GSTIN.</div>
+  </div>
+  <div class="card">
+    <h2>Negative Liability Statement — Regular Taxpayers</h2>
+    <p class="desc">Shows any negative balance carried forward, usually from amended or corrected returns. Rare in practice.</p>
+    <div class="empty">No records found for this GSTIN.</div>
+  </div>
+  <div class="card">
+    <h2>RCM Liability / ITC Statement</h2>
+    <p class="desc">Tracks tax paid under Reverse Charge Mechanism (where the buyer, not the seller, pays GST — common for certain notified services) and the ITC claimed against it.</p>
+    <div class="empty">No records found for this GSTIN.</div>
+  </div>
+  <div class="card">
+    <h2>Application for Unbarring Returns</h2>
+    <p class="desc">Used only if your return filing has been blocked due to non-compliance elsewhere (e.g. an e-way bill violation). Not applicable to a fresh practice account.</p>
+    <div class="empty">No active bar on this GSTIN — nothing to apply for.</div>
+  </div>
+</div>
+
+<div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
+
+</body>
+</html>

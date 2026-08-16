@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Electronic Ledgers — GST Practice Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .topbar a { color: #fff; font-size: 12px; text-decoration: none; }
+
+  .wrap { max-width: 900px; margin: 24px auto; padding: 0 20px 60px; }
+  .tabs { display: flex; background: #fff; border: 1px solid #dbe0e6; border-radius: 4px 4px 0 0; overflow: hidden; }
+  .tab { flex: 1; text-align: center; padding: 12px; font-size: 13px; color: #666; cursor: pointer; border-right: 1px solid #dbe0e6; }
+  .tab:last-child { border-right: none; }
+  .tab.active { background: #1b3a73; color: #fff; font-weight: bold; }
+
+  .card { background: #fff; border: 1px solid #dbe0e6; border-top: none; border-radius: 0 0 4px 4px; padding: 24px; }
+  .card h2 { color: #1b3a73; font-size: 16px; margin-bottom: 4px; }
+  .card .sub { font-size: 12.5px; color: #666; margin-bottom: 18px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f4f6f9; text-align: left; padding: 9px 8px; border-bottom: 2px solid #dbe0e6; font-size: 12px; }
+  td { padding: 9px 8px; border-bottom: 1px solid #eee; }
+  .empty { text-align: center; padding: 30px 10px; color: #888; font-size: 13px; }
+
+  .summary-strip { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .summary-strip .box { background: #f4f6f9; border-radius: 4px; padding: 12px 16px; flex: 1; min-width: 140px; }
+  .summary-strip .box .label { font-size: 11px; color: #888; }
+  .summary-strip .box .val { font-size: 16px; font-weight: bold; color: #1b3a73; }
+
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+</style>
+</head>
+<body>
+
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.</div>
+<div class="topbar">
+  <div><h1 id="ledger-title">Electronic Ledgers</h1></div>
+  <a href="dashboard.html">&larr; Back to dashboard</a>
+</div>
+
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="card" id="content"></div>
+</div>
+
+<div class="sim-tag">🎓 Training Simulation — not the real GST portal</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+let activeTab = params.get("tab") || "cash";
+const inr = (n) => "₹" + Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+// Gather every filed GSTR-3B period from localStorage — this is the same
+// data the actual filing simulation produced, so these ledgers reflect
+// real filing activity rather than fabricated numbers.
+function getAllFiledPeriods() {
+  const entries = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("gst_sim_gstr3b_")) {
+      const data = JSON.parse(localStorage.getItem(key) || "{}");
+      if (data.filed) entries.push({ period: key.replace("gst_sim_gstr3b_", ""), data });
+    }
+  }
+  return entries.sort((a, b) => a.period.localeCompare(b.period));
+}
+
+function computeUtilization(liability, itc) {
+  let igstItc = itc.igst, cgstItc = itc.cgst, sgstItc = itc.sgst;
+  let igstLiab = liability.igst, cgstLiab = liability.cgst, sgstLiab = liability.sgst;
+  const useIgstForIgst = Math.min(igstItc, igstLiab); igstItc -= useIgstForIgst; igstLiab -= useIgstForIgst;
+  const useCgstForCgst = Math.min(cgstItc, cgstLiab); cgstItc -= useCgstForCgst; cgstLiab -= useCgstForCgst;
+  const useIgstForCgst = Math.min(igstItc, cgstLiab); igstItc -= useIgstForCgst; cgstLiab -= useIgstForCgst;
+  const useSgstForSgst = Math.min(sgstItc, sgstLiab); sgstItc -= useSgstForSgst; sgstLiab -= useSgstForSgst;
+  const useIgstForSgst = Math.min(igstItc, sgstLiab); igstItc -= useIgstForSgst; sgstLiab -= useIgstForSgst;
+  return {
+    cashTotal: igstLiab + cgstLiab + sgstLiab,
+    itcUtilized: (useIgstForIgst + useIgstForCgst + useIgstForSgst) + useCgstForCgst + useSgstForSgst,
+    leftoverItc: { igst: igstItc, cgst: cgstItc, sgst: sgstItc },
+  };
+}
+
+const tabDefs = [
+  { id: "cash", label: "Cash Ledger" },
+  { id: "credit", label: "Credit Ledger" },
+  { id: "liability", label: "Liability Ledger" },
+];
+
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = tabDefs.map((t) =>
+    `<div class="tab ${t.id === activeTab ? "active" : ""}" onclick="switchTab('${t.id}')">${t.label}</div>`
+  ).join("");
+}
+function switchTab(id) { activeTab = id; render(); }
+
+function renderCash() {
+  const entries = getAllFiledPeriods();
+  if (entries.length === 0) {
+    return `<h2>Cash Ledger</h2><p class="sub">Tracks tax paid in cash, period by period.</p><div class="empty">No filed returns yet — file a GSTR-3B first to see cash ledger entries.</div>`;
+  }
+  let totalCash = 0;
+  const rows = entries.map(({ period, data }) => {
+    const u = computeUtilization(data.outward, data.itc);
+    totalCash += u.cashTotal;
+    return `<tr><td>${period}</td><td>${inr(u.cashTotal)}</td><td>GSTR-3B filing</td></tr>`;
+  }).join("");
+  return `
+    <h2>Cash Ledger</h2>
+    <p class="sub">Tax paid in cash for each filed period.</p>
+    <div class="summary-strip"><div class="box"><div class="label">Total cash paid to date</div><div class="val">${inr(totalCash)}</div></div></div>
+    <table><thead><tr><th>Period</th><th>Cash Paid</th><th>Source</th></tr></thead><tbody>${rows}</tbody></table>
+  `;
+}
+
+function renderCredit() {
+  const entries = getAllFiledPeriods();
+  if (entries.length === 0) {
+    return `<h2>Credit Ledger (ITC)</h2><p class="sub">Tracks Input Tax Credit available, used, and carried forward.</p><div class="empty">No filed returns yet — file a GSTR-3B first to see ITC entries.</div>`;
+  }
+  const rows = entries.map(({ period, data }) => {
+    const u = computeUtilization(data.outward, data.itc);
+    const totalItc = data.itc.igst + data.itc.cgst + data.itc.sgst;
+    return `<tr><td>${period}</td><td>${inr(totalItc)}</td><td>${inr(u.itcUtilized)}</td><td>${inr(u.leftoverItc.igst + u.leftoverItc.cgst + u.leftoverItc.sgst)}</td></tr>`;
+  }).join("");
+  return `
+    <h2>Credit Ledger (Input Tax Credit)</h2>
+    <p class="sub">ITC available vs. utilized vs. carried forward, per period.</p>
+    <table><thead><tr><th>Period</th><th>ITC Available</th><th>ITC Utilized</th><th>Balance Carried Forward</th></tr></thead><tbody>${rows}</tbody></table>
+  `;
+}
+
+function renderLiability() {
+  const entries = getAllFiledPeriods();
+  if (entries.length === 0) {
+    return `<h2>Liability Ledger</h2><p class="sub">Tracks total tax liability declared and how it was settled.</p><div class="empty">No filed returns yet — file a GSTR-3B first to see liability entries.</div>`;
+  }
+  let totalLiability = 0;
+  const rows = entries.map(({ period, data }) => {
+    const liab = data.outward.igst + data.outward.cgst + data.outward.sgst;
+    totalLiability += liab;
+    return `<tr><td>${period}</td><td>${inr(liab)}</td><td>Fully offset (ITC + cash)</td></tr>`;
+  }).join("");
+  return `
+    <h2>Liability Ledger</h2>
+    <p class="sub">Total tax liability declared in each filed period.</p>
+    <div class="summary-strip"><div class="box"><div class="label">Total liability declared to date</div><div class="val">${inr(totalLiability)}</div></div></div>
+    <table><thead><tr><th>Period</th><th>Liability</th><th>Settlement</th></tr></thead><tbody>${rows}</tbody></table>
+  `;
+}
+
+function render() {
+  renderTabs();
+  const renderers = { cash: renderCash, credit: renderCredit, liability: renderLiability };
+  document.getElementById("content").innerHTML = renderers[activeTab]();
+}
+render();
+</script>
+
+</body>
+</html>
