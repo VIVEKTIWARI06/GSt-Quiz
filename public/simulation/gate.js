@@ -23,13 +23,35 @@
       const elapsedSec = (Date.now() - Number(first)) / 1000;
       const remainingSec = cfg.free_seconds - elapsedSec;
 
-      if (remainingSec <= 0) showGate();
-      else setTimeout(showGate, remainingSec * 1000);
+      if (remainingSec <= 0) { showGate(); return; }
+      showCountdown(remainingSec);
+      setTimeout(showGate, remainingSec * 1000);
     })
     .catch(() => {}); // if config fetch fails, fail open (don't block on a network hiccup)
 
+  function showCountdown(remainingSec) {
+    const badge = document.createElement("div");
+    badge.id = "sim-gate-countdown";
+    badge.style.cssText = "position:fixed;bottom:16px;left:16px;background:#1b3a73;color:#fff;font-size:12px;font-family:Arial,Helvetica,sans-serif;padding:8px 14px;border-radius:20px;z-index:9998;box-shadow:0 2px 8px rgba(0,0,0,0.2);";
+    document.body.appendChild(badge);
+
+    let remaining = Math.ceil(remainingSec);
+    function tick() {
+      if (remaining <= 0) { badge.remove(); return; }
+      const m = Math.floor(remaining / 60), s = remaining % 60;
+      badge.textContent = `⏱ Free trial: ${m}:${String(s).padStart(2, "0")} remaining`;
+      remaining--;
+    }
+    tick();
+    const interval = setInterval(() => {
+      tick();
+      if (remaining < 0) clearInterval(interval);
+    }, 1000);
+  }
+
   function showGate() {
     if (document.getElementById("sim-gate-overlay")) return; // already showing
+    document.getElementById("sim-gate-countdown")?.remove();
 
     const overlay = document.createElement("div");
     overlay.id = "sim-gate-overlay";
