@@ -97,6 +97,15 @@
         <tbody id="orgs-tbody"></tbody>
       </table>
 
+      <h2 style="margin-top: 40px;">Simulator Access</h2>
+      <p class="sub">Control whether the GST Simulator requires login after a free trial period.</p>
+      <label style="display:flex;align-items:center;gap:8px;font-weight:normal;">
+        <input type="checkbox" id="sim-login-required" style="width:auto;" /> Require login after free trial
+      </label>
+      <label>Free trial length (seconds)<input type="number" id="sim-free-seconds" value="120" min="0" style="max-width:150px;" /></label>
+      <button id="btn-save-sim-settings" class="btn-secondary" style="margin-top:10px;">Save</button>
+      <p class="muted small" id="sim-settings-status"></p>
+
       <h2 style="margin-top: 40px;">Emergency bypass code</h2>
       <p class="sub">Lets a student skip OTP verification entirely — the "everything else is down" last resort. Hand this out verbally/via WhatsApp only when genuinely needed, and regenerate it after each use.</p>
       <div id="bypass-code-display" class="result-box" style="font-size: 20px; font-weight: 700; letter-spacing: 2px; text-align: center;">Loading…</div>

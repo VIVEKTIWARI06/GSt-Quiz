@@ -20,6 +20,9 @@ import { onRequestPost as quizResumePost } from "../functions/api/quiz/resume.js
 import { onRequestGet as organizationsGet } from "../functions/api/organizations.js";
 import { onRequestGet as adminOrgsGet, onRequestPost as adminOrgsPost } from "../functions/api/admin/organizations.js";
 import { onRequestGet as bypassCodeGet, onRequestPost as bypassCodePost } from "../functions/api/admin/bypass-code.js";
+import { onRequestPost as simulatorLeadPost } from "../functions/api/simulator-lead.js";
+import { onRequestGet as simulatorConfigGet } from "../functions/api/simulator-config.js";
+import { onRequestPost as simulatorSettingsPost } from "../functions/api/admin/simulator-settings.js";
 import { runBackup } from "../functions/_backup.js";
 
 const routes = {
@@ -40,6 +43,9 @@ const routes = {
   "POST /api/admin/organizations": adminOrgsPost,
   "GET /api/admin/bypass-code": bypassCodeGet,
   "POST /api/admin/bypass-code": bypassCodePost,
+  "POST /api/simulator-lead": simulatorLeadPost,
+  "GET /api/simulator-config": simulatorConfigGet,
+  "POST /api/admin/simulator-settings": simulatorSettingsPost,
 };
 
 export default {

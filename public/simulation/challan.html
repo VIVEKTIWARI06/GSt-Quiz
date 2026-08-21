@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Challan — GST Practice Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .topbar a { color: #fff; font-size: 12px; text-decoration: none; }
+  .wrap { max-width: 700px; margin: 24px auto; padding: 0 20px 60px; }
+  .card { background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; padding: 26px; }
+  .card h2 { color: #1b3a73; font-size: 17px; margin-bottom: 6px; }
+  .card .sub { font-size: 12.5px; color: #666; margin-bottom: 18px; }
+  label { display: block; font-size: 12px; font-weight: bold; margin: 12px 0 4px; }
+  input, select { width: 100%; padding: 8px 9px; border: 1px solid #c3c9d1; border-radius: 3px; font-size: 13px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .btn { padding: 10px 18px; border: none; border-radius: 3px; font-size: 13px; font-weight: bold; cursor: pointer; }
+  .btn-primary { background: #1b3a73; color: #fff; }
+  .success-box { text-align: center; padding: 26px 10px; }
+  .check { width: 56px; height: 56px; border-radius: 50%; background: #e3f7f0; color: #14b8a6; font-size: 28px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .cpin { font-size: 20px; font-weight: bold; color: #1b3a73; margin: 10px 0; }
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; }
+</style>
+</head>
+<body>
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only. Not affiliated with, endorsed by, or connected to gst.gov.in or the Government of India.</div>
+<div class="topbar"><div><h1>Create Challan</h1></div><a href="dashboard.html">&larr; Back to dashboard</a></div>
+<div class="wrap"><div class="card" id="content">
+  <h2>Create Payment Challan</h2>
+  <p class="sub">Simulated challan generation, same as PMT-06 on the real portal.</p>
+  <div class="grid3">
+    <div><label>CGST (₹)</label><input id="c-cgst" type="number" min="0" value="0" /></div>
+    <div><label>SGST (₹)</label><input id="c-sgst" type="number" min="0" value="0" /></div>
+    <div><label>IGST (₹)</label><input id="c-igst" type="number" min="0" value="0" /></div>
+  </div>
+  <label>Payment Mode</label>
+  <select id="c-mode"><option>Net Banking</option><option>NEFT/RTGS</option><option>Over the Counter</option></select>
+  <div style="margin-top:18px;"><button class="btn btn-primary" onclick="generateChallan()">Generate Challan</button></div>
+</div></div>
+<div class="sim-tag">🎓 Training Simulation</div>
+<script>
+function generateChallan() {
+  const cgst = Number(document.getElementById("c-cgst").value) || 0;
+  const sgst = Number(document.getElementById("c-sgst").value) || 0;
+  const igst = Number(document.getElementById("c-igst").value) || 0;
+  const total = cgst + sgst + igst;
+  if (total <= 0) { alert("Enter at least one amount greater than zero."); return; }
+  const cpin = "CPIN" + Math.random().toString(36).slice(2, 12).toUpperCase();
+  document.getElementById("content").innerHTML = `
+    <div class="success-box">
+      <div class="check">✓</div>
+      <h2>Challan Generated (Simulation)</h2>
+      <p class="sub">CPIN:</p>
+      <div class="cpin">${cpin}</div>
+      <p class="sub">Total amount: ₹${total.toLocaleString("en-IN")}</p>
+      <p class="sub">In the real portal, this challan stays valid for 15 days for payment. No real payment was made here.</p>
+      <a href="dashboard.html" class="btn btn-primary" style="text-decoration:none;display:inline-block;margin-top:12px;">Back to Dashboard</a>
+    </div>`;
+}
+</script>
+<script src="gate.js"></script>
+</body>
+</html>

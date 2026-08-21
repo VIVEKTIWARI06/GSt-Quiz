@@ -21,6 +21,7 @@ $("#btn-login").addEventListener("click", async () => {
     await loadCourses(); // also validates the password
     await loadOrganizations();
     await loadBypassCode();
+    await loadSimSettings();
     show("screen-admin");
   } catch (err) {
     $("#login-error").textContent = err.message;
@@ -31,6 +32,32 @@ async function loadBypassCode() {
   const data = await adminApi("/admin/bypass-code");
   $("#bypass-code-display").textContent = data.code || "No code set yet — click 'Generate new code' below.";
 }
+
+async function loadSimSettings() {
+  try {
+    const res = await fetch("/api/simulator-config");
+    const cfg = await res.json();
+    $("#sim-login-required").checked = !!cfg.login_required;
+    $("#sim-free-seconds").value = cfg.free_seconds ?? 120;
+  } catch {}
+}
+
+$("#btn-save-sim-settings").addEventListener("click", async () => {
+  const status = $("#sim-settings-status");
+  status.textContent = "Saving…";
+  try {
+    await adminApi("/admin/simulator-settings", {
+      method: "POST",
+      body: JSON.stringify({
+        login_required: $("#sim-login-required").checked,
+        free_seconds: Number($("#sim-free-seconds").value) || 0,
+      }),
+    });
+    status.textContent = "Saved.";
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
+  }
+});
 
 $("#btn-regenerate-bypass").addEventListener("click", async () => {
   const status = $("#bypass-status");
