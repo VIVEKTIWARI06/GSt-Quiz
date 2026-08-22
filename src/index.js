@@ -23,6 +23,7 @@ import { onRequestGet as bypassCodeGet, onRequestPost as bypassCodePost } from "
 import { onRequestPost as simulatorLeadPost } from "../functions/api/simulator-lead.js";
 import { onRequestGet as simulatorConfigGet } from "../functions/api/simulator-config.js";
 import { onRequestPost as simulatorSettingsPost } from "../functions/api/admin/simulator-settings.js";
+import { onRequestPost as toggleCoursePost } from "../functions/api/admin/toggle-course.js";
 import { runBackup } from "../functions/_backup.js";
 
 const routes = {
@@ -46,6 +47,7 @@ const routes = {
   "POST /api/simulator-lead": simulatorLeadPost,
   "GET /api/simulator-config": simulatorConfigGet,
   "POST /api/admin/simulator-settings": simulatorSettingsPost,
+  "POST /api/admin/toggle-course": toggleCoursePost,
 };
 
 export default {

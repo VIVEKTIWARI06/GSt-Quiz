@@ -132,8 +132,25 @@ async function loadCourses() {
       <td>${c.bank_size}</td>
       <td>${c.question_count}</td>
       <td>${c.pass_percent}%</td>
-      <td>${c.attempts_completed}</td>`;
+      <td>${c.attempts_completed}</td>
+      <td><label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" class="course-visible-toggle" data-id="${c.id}" ${c.active ? "checked" : ""} style="width:auto;" />
+        <span class="muted small">${c.active ? "Visible" : "Hidden"}</span>
+      </label></td>`;
     tbody.appendChild(tr);
+  });
+  document.querySelectorAll(".course-visible-toggle").forEach((el) => {
+    el.addEventListener("change", async () => {
+      try {
+        await adminApi("/admin/toggle-course", {
+          method: "POST",
+          body: JSON.stringify({ course_id: el.dataset.id, active: el.checked }),
+        });
+        await loadCourses();
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    });
   });
 }
 
