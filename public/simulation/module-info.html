@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Module Info — GST Practice Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef1f5; color: #1a1a1a; }
+  .disclaimer { background: #b4324a; color: #fff; text-align: center; font-size: 13px; padding: 8px 16px; }
+  .topbar { background: #0f2a5c; color: #fff; padding: 12px 24px; }
+  .topbar h1 { font-size: 17px; }
+  .wrap { max-width: 600px; margin: 40px auto; padding: 0 20px; }
+  .card { background: #fff; border: 1px solid #dbe0e6; border-radius: 4px; padding: 26px; text-align: center; }
+  .card h2 { color: #1b3a73; font-size: 17px; margin-bottom: 10px; }
+  .card p { font-size: 13px; color: #666; margin-bottom: 18px; line-height: 1.6; }
+  .btn { background: #1b3a73; color: #fff; padding: 10px 20px; border-radius: 3px; text-decoration: none; font-size: 13px; font-weight: bold; }
+  .sim-tag { position: fixed; bottom: 16px; right: 16px; background: #14b8a6; color: #fff; font-size: 11px; padding: 6px 12px; border-radius: 20px; }
+</style>
+</head>
+<body>
+<div class="disclaimer">This is a training simulation built by gstreturn.org for educational purposes only.</div>
+<div class="topbar"><h1 id="page-title">Module</h1></div>
+<div class="wrap"><div class="card">
+  <h2 id="module-name">This section</h2>
+  <p>This tab appears here to match the real GST portal's layout, but isn't part of this training simulation — it's outside what registration and return filing practice covers.</p>
+  <a href="dashboard.html" class="btn">&larr; Back to Dashboard</a>
+</div></div>
+<div class="sim-tag">🎓 Training Simulation</div>
+<script>
+  const name = new URLSearchParams(window.location.search).get("name") || "This section";
+  document.getElementById("module-name").textContent = name;
+  document.title = name + " — GST Practice Portal";
+</script>
+<script src="gate.js"></script>
+</body>
+</html>

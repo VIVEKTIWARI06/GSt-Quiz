@@ -8,7 +8,9 @@
   const VERIFIED_KEY = "gst_sim_verified";
   const FIRST_VISIT_KEY = "gst_sim_first_visit";
 
-  if (localStorage.getItem(VERIFIED_KEY)) return; // already verified, nothing to do
+  injectExitBar();
+
+  if (localStorage.getItem(VERIFIED_KEY)) return; // already verified, nothing more to do
 
   fetch("/api/simulator-config")
     .then((r) => r.json())
@@ -47,6 +49,22 @@
       tick();
       if (remaining < 0) clearInterval(interval);
     }, 1000);
+  }
+
+  function injectExitBar() {
+    const bar = document.createElement("div");
+    bar.style.cssText = "position:fixed;top:12px;right:12px;z-index:9997;display:flex;gap:8px;font-family:Arial,Helvetica,sans-serif;";
+    const isVerified = !!localStorage.getItem(VERIFIED_KEY);
+    bar.innerHTML = `
+      <a href="/" style="background:#fff;color:#1b3a73;border:1px solid #c3c9d1;font-size:11px;font-weight:bold;padding:6px 12px;border-radius:16px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.1);">🏠 Exit to gstreturn.org</a>
+      ${isVerified ? `<button id="sim-gate-logout" style="background:#fff;color:#b4324a;border:1px solid #c3c9d1;font-size:11px;font-weight:bold;padding:6px 12px;border-radius:16px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);">Logout</button>` : ""}
+    `;
+    document.body.appendChild(bar);
+    document.getElementById("sim-gate-logout")?.addEventListener("click", () => {
+      localStorage.removeItem(VERIFIED_KEY);
+      localStorage.removeItem(FIRST_VISIT_KEY);
+      window.location.href = "/simulation/dashboard.html";
+    });
   }
 
   function showGate() {
