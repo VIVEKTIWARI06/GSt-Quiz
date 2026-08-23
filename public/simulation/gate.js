@@ -53,18 +53,26 @@
 
   function injectExitBar() {
     const bar = document.createElement("div");
+    bar.id = "sim-exit-bar";
     bar.style.cssText = "position:fixed;top:12px;right:12px;z-index:9997;display:flex;gap:8px;font-family:Arial,Helvetica,sans-serif;";
+    renderExitBar(bar);
+    document.body.appendChild(bar);
+  }
+
+  function renderExitBar(bar) {
     const isVerified = !!localStorage.getItem(VERIFIED_KEY);
     bar.innerHTML = `
       <a href="/" style="background:#fff;color:#1b3a73;border:1px solid #c3c9d1;font-size:11px;font-weight:bold;padding:6px 12px;border-radius:16px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.1);">🏠 Exit to gstreturn.org</a>
-      ${isVerified ? `<button id="sim-gate-logout" style="background:#fff;color:#b4324a;border:1px solid #c3c9d1;font-size:11px;font-weight:bold;padding:6px 12px;border-radius:16px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);">Logout</button>` : ""}
+      ${isVerified
+        ? `<button id="sim-gate-logout" style="background:#fff;color:#b4324a;border:1px solid #c3c9d1;font-size:11px;font-weight:bold;padding:6px 12px;border-radius:16px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);">Logout</button>`
+        : `<button id="sim-gate-login" style="background:#14b8a6;color:#fff;border:none;font-size:11px;font-weight:bold;padding:6px 12px;border-radius:16px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);">Login / Sign Up</button>`}
     `;
-    document.body.appendChild(bar);
     document.getElementById("sim-gate-logout")?.addEventListener("click", () => {
       localStorage.removeItem(VERIFIED_KEY);
       localStorage.removeItem(FIRST_VISIT_KEY);
       window.location.href = "/simulation/dashboard.html";
     });
+    document.getElementById("sim-gate-login")?.addEventListener("click", showGate);
   }
 
   function showGate() {
@@ -141,6 +149,8 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Invalid code");
         localStorage.setItem(VERIFIED_KEY, "1");
+        const bar = document.getElementById("sim-exit-bar");
+        if (bar) renderExitBar(bar);
         overlay.remove();
       } catch (e) {
         errEl.textContent = e.message;
